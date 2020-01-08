@@ -13,5 +13,6 @@ UCLASS()
 class TBS_PROJECT_API ATBS_ProjectGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
-	
+protected:
+    void BeginPlay() override;
 };
