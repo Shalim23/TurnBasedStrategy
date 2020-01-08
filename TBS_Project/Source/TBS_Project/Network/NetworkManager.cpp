@@ -18,7 +18,8 @@ void ANetworkManager::BeginPlay()
     m_NetworkSocketHandler.SetMessageFromServerCallback(
         [this](const TSharedPtr<FJsonObject>& jsonObject) { ProcessMessage(jsonObject); });
 
-    m_NetworkSocketHandler.SetSendErrorCallback([this]() { OnConnectionError(); });
+    m_NetworkSocketHandler.SetSendErrorCallback(
+        [this]() { OnConnectionError(); });
 
     m_NetworkMessagesHandler.Init();
 
@@ -27,7 +28,7 @@ void ANetworkManager::BeginPlay()
 
 void ANetworkManager::OnReturnToMainMenu(const EventData& eventData)
 {
-    /*if (eventData.eventType == GameplayEventType::ReturnToMainMenu)
+    if (eventData.eventType == GameplayEventType::ReturnToMainMenu)
     {
         if (m_IsConnected)
         {
@@ -38,23 +39,23 @@ void ANetworkManager::OnReturnToMainMenu(const EventData& eventData)
         }
 
         Shutdown();
-    }*/
+    }
 }
 
 void ANetworkManager::OnPlayerReady(const EventData& eventData)
 {
-    /*if (eventData.eventType == GameplayEventType::ReadyForGame)
+    if (eventData.eventType == GameplayEventType::ReadyForGame)
     {
         TSharedPtr<FJsonObject> messageObject = MakeShareable(new FJsonObject);
         messageObject->SetStringField(MessageNameJsonKey, IsReadyMessage);
 
         m_NetworkSocketHandler.Send(messageObject);
-    }*/
+    }
 }
 
 void ANetworkManager::Connect()
 {
-    /*if (m_NetworkSocketHandler.TryConnect())
+    if (m_NetworkSocketHandler.TryConnect())
     {
         m_IsConnected = true;
         SetActorTickEnabled(true);
@@ -72,7 +73,7 @@ void ANetworkManager::Connect()
         {
             noServerConnectionEvent->Broadcast(NoServerConnectionEventData());
         }
-    }*/
+    }
 }
 
 void ANetworkManager::Shutdown()
@@ -84,10 +85,10 @@ void ANetworkManager::Shutdown()
 
 void ANetworkManager::SubscribeOnEvents()
 {
-    /*m_EventsHandler.subscribe({
+    m_EventsHandler.subscribe({
         {GameplayEventType::ReturnToMainMenu, [this](const EventData& eventData) { OnReturnToMainMenu(eventData); }},
         {GameplayEventType::ReadyForGame, [this](const EventData& eventData) { OnPlayerReady(eventData); }},
-        });*/
+        });
 }
 
 void ANetworkManager::ProcessMessage(const TSharedPtr<FJsonObject>& jsonObject)
