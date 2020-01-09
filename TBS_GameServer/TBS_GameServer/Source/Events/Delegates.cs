@@ -13,6 +13,6 @@ namespace TBS_GameServer.Events
 
         public delegate void NetworkMessageDelegate(JsonElement data);
         public delegate void ConnectionErrorDelegate();
-        public delegate void PlayersConnectedDelegate(int amount);
+        public delegate void PlayersConnectedDelegate();
     }
 }

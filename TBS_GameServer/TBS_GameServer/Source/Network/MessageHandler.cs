@@ -19,7 +19,7 @@ namespace TBS_GameServer.Network
 
         void SubscribeOnEvents()
         {
-            EventsManager eventsManager = EventsManager.GetInstance();
+            EventsManagerInstance eventsManager = EventsManagerInstance.GetInstance();
             eventsManager.Subscribe<Delegates.NetworkMessageDelegate>(Delegates.DelegateType.NetworkMessage, ProcessMessage);
         }
 

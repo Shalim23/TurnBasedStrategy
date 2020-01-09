@@ -1,8 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="if NOT EXIST &quot;$(ProjectDir)$(OutDir)JsonData&quot; ( &#xD;&#xA;mkdir &quot;$(ProjectDir)$(OutDir)JsonData&quot;&#xD;&#xA;)&#xD;&#xA;copy &quot;$(ProjectDir)../JsonData&quot; &quot;$(ProjectDir)$(OutDir)JsonData&quot;" />
+  </Target>
 
 </Project>

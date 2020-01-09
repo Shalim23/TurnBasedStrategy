@@ -5,6 +5,8 @@ using TBS_GameServer.Utilities;
 using System.Text.Json;
 using TBS_GameServer.Events;
 
+using static TBS_GameServer.Events.Delegates;
+
 namespace TBS_GameServer.Network
 {
     class SocketsHandler
@@ -37,63 +39,65 @@ namespace TBS_GameServer.Network
                     JsonElement message;
                     if (Utils.TryGetValidMessageJsonObject(buffer, out message))
                     {
-                        Delegates.NetworkMessageDelegate networkMessageDelegate;
-                        if (EventsManager.GetInstance().TryGetDelegate(Delegates.DelegateType.NetworkMessage, out networkMessageDelegate))
+                        NetworkMessageDelegate networkMessageDelegate;
+                        if (m_EventsManager.TryGetDelegate(DelegateType.NetworkMessage, out networkMessageDelegate))
                         {
                             networkMessageDelegate.Invoke(message);
                         }
                         else
                         {
-                            Console.Write($"{Delegates.DelegateType.ConnectionError.ToString()} was not invoked");
+                            Console.Write($"{DelegateType.ConnectionError.ToString()} was not invoked");
                         }
                     }
                     else
                     {
-                        Console.WriteLine("CheckCancelFromPlayers -> invalid json data");
+                        Console.WriteLine("ProcessReceive -> invalid json data");
                         ProcessConnectionError(user.Value);
                     }
                 }
                 else if (socketError == SocketError.ConnectionReset)
                 {
-                    Console.WriteLine("SocketsHandler.Receive -> connected user fail");
+                    Console.WriteLine("ProcessReceive -> connected user fail");
                     ProcessConnectionError(user.Value);
                 }
             }
         }
 
-        public void Activate(List<ConnectedPlayerData> readyPlayers)
+        public void Init(EventsManagerInstance eventsManager, List<ConnectedPlayerData> readyPlayers)
         {
+            m_EventsManager = eventsManager;
             m_readyPlayers = new Dictionary<string, ConnectedPlayerData>();
             for (int index = 0; index < readyPlayers.Count; ++index)
             {
                 m_readyPlayers.Add(LoadableData.Ids[index], readyPlayers[index]);
             }
 
-            Delegates.PlayersConnectedDelegate playersConnectedDelegate;
-            if (EventsManager.GetInstance().TryGetDelegate(Delegates.DelegateType.PlayersConnected, out playersConnectedDelegate))
+            PlayersConnectedDelegate playersConnectedDelegate;
+            if (m_EventsManager.TryGetDelegate(DelegateType.PlayersConnected, out playersConnectedDelegate))
             {
-                playersConnectedDelegate.Invoke(m_readyPlayers.Count);
+                playersConnectedDelegate.Invoke();
             }
             else
             {
-                Console.Write($"{Delegates.DelegateType.PlayersConnected.ToString()} was not invoked");
+                Console.Write($"{DelegateType.PlayersConnected.ToString()} was not invoked");
             }
         }
 
         void ProcessConnectionError(ConnectedPlayerData user)
         {
             user.socket.Close();
-            Delegates.ConnectionErrorDelegate connectionErrorDelegate;
-            if (EventsManager.GetInstance().TryGetDelegate(Delegates.DelegateType.ConnectionError, out connectionErrorDelegate))
+            ConnectionErrorDelegate connectionErrorDelegate;
+            if (m_EventsManager.TryGetDelegate(DelegateType.ConnectionError, out connectionErrorDelegate))
             {
                 connectionErrorDelegate.Invoke();
             }
             else
             {
-                Console.Write($"{Delegates.DelegateType.ConnectionError.ToString()} was not invoked");
+                Console.Write($"{DelegateType.ConnectionError.ToString()} was not invoked");
             }
         }
 
+        EventsManagerInstance m_EventsManager = null;
         Dictionary<string, ConnectedPlayerData> m_readyPlayers;
     }
 }

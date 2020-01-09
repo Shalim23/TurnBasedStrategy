@@ -9,8 +9,7 @@ namespace TBS_GameServer.Utilities
 {
     static class Utils
     {
-        const string CitadelsGameMessageJsonKey = "CitadelsGameMessage";
-
+        
         static public List<T> ShuffleList<T>(List<T> list)
         {
             Random rand = new Random();
@@ -49,7 +48,7 @@ namespace TBS_GameServer.Utilities
             JsonDocument doc;
             if (TryParseJson(data, out doc))
             {
-                if (doc.RootElement.TryGetProperty(CitadelsGameMessageJsonKey, out element))
+                if (doc.RootElement.TryGetProperty(NetworkDataConsts.TBSGameMessageJsonKey, out element))
                 {
                     return true;
                 }
@@ -66,7 +65,7 @@ namespace TBS_GameServer.Utilities
 
             utf8JsonWriter.WriteStartObject();
 
-            utf8JsonWriter.WriteStartObject(CitadelsGameMessageJsonKey);
+            utf8JsonWriter.WriteStartObject(NetworkDataConsts.TBSGameMessageJsonKey);
 
             foreach (KeyValuePair<string, object> value in values)
             {

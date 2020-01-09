@@ -5,21 +5,8 @@ using static TBS_GameServer.Events.Delegates;
 
 namespace TBS_GameServer.Events
 {
-    class EventsManager
+    class EventsManagerInstance
     {
-        static EventsManager instance = null;
-
-        [MethodImpl(MethodImplOptions.Synchronized)]
-        public static EventsManager GetInstance()
-        {
-            if (instance == null)
-            {
-                instance = new EventsManager();
-            }
-
-            return instance;
-        }
-
         public bool TryGetDelegate<T>(DelegateType type, out T requiredDelegate) where T : Delegate
         {
             if (m_Delegates.ContainsKey(type))
@@ -55,11 +42,6 @@ namespace TBS_GameServer.Events
             m_Delegates.Add(DelegateType.ConnectionError, connectionErrorDelegate);
             m_Delegates.Add(DelegateType.NetworkMessage, networkMessageDelegate);
             m_Delegates.Add(DelegateType.PlayersConnected, playersConnectedDelegate);
-        }
-
-        public void CleanUp()
-        {
-            m_Delegates = null;
         }
 
         Dictionary<DelegateType, Delegate> m_Delegates;
