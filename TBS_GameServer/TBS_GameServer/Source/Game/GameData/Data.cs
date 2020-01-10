@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TBS_GameServer.Game.GameData
+namespace TBS_GameServer.Source.Game.GameData
 {
     static class GameDataStructs
     {

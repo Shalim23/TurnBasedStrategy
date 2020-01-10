@@ -1,9 +1,9 @@
-﻿using System.Runtime.CompilerServices;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
-using static TBS_GameServer.Events.Delegates;
 
-namespace TBS_GameServer.Events
+using static TBS_GameServer.Source.Events.Delegates;
+
+namespace TBS_GameServer.Source.Events
 {
     class EventsManagerInstance
     {
@@ -37,11 +37,9 @@ namespace TBS_GameServer.Events
             m_Delegates = new Dictionary<DelegateType, Delegate>();
             NetworkMessageDelegate networkMessageDelegate = null;
             ConnectionErrorDelegate connectionErrorDelegate = null;
-            PlayersConnectedDelegate playersConnectedDelegate = null;
 
             m_Delegates.Add(DelegateType.ConnectionError, connectionErrorDelegate);
             m_Delegates.Add(DelegateType.NetworkMessage, networkMessageDelegate);
-            m_Delegates.Add(DelegateType.PlayersConnected, playersConnectedDelegate);
         }
 
         Dictionary<DelegateType, Delegate> m_Delegates;

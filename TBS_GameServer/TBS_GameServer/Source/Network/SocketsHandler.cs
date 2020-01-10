@@ -1,13 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using TBS_GameServer.Utilities;
 using System.Text.Json;
-using TBS_GameServer.Events;
+using System.Threading.Tasks;
 
-using static TBS_GameServer.Events.Delegates;
+using TBS_GameServer.Source.Utilities;
+using TBS_GameServer.Source.Events;
 
-namespace TBS_GameServer.Network
+using static TBS_GameServer.Source.Events.Delegates;
+
+namespace TBS_GameServer.Source.Network
 {
     class SocketsHandler
     { 
@@ -26,39 +28,49 @@ namespace TBS_GameServer.Network
             }
         }
 
+        void InvokeNetMessage(JsonElement message)
+        {
+            NetworkMessageDelegate networkMessageDelegate;
+            if (m_EventsManager.TryGetDelegate(DelegateType.NetworkMessage, out networkMessageDelegate))
+            {
+                Task.Run(() => networkMessageDelegate.Invoke(message));
+            }
+            else
+            {
+                Console.Write($"{DelegateType.ConnectionError.ToString()} was not invoked");
+            }
+        }
+
         public void ProcessReceive()
         {
-            foreach (KeyValuePair<string, ConnectedPlayerData> user in m_readyPlayers)
+            while(m_IsActive)
             {
-                byte[] buffer = new byte[NetworkDataConsts.DataSize];
-                SocketError socketError;
-
-                int receivesBytes = user.Value.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
-                if (receivesBytes > 0)
+                foreach (KeyValuePair<string, ConnectedPlayerData> user in m_readyPlayers)
                 {
-                    JsonElement message;
-                    if (Utils.TryGetValidMessageJsonObject(buffer, out message))
+                    byte[] buffer = new byte[NetworkDataConsts.DataSize];
+                    SocketError socketError;
+
+                    int receivesBytes = user.Value.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
+                    if (receivesBytes > 0)
                     {
-                        NetworkMessageDelegate networkMessageDelegate;
-                        if (m_EventsManager.TryGetDelegate(DelegateType.NetworkMessage, out networkMessageDelegate))
+                        JsonElement message;
+                        if (Utils.TryGetValidMessageJsonObject(buffer, out message))
                         {
-                            networkMessageDelegate.Invoke(message);
+                            InvokeNetMessage(message);
                         }
                         else
                         {
-                            Console.Write($"{DelegateType.ConnectionError.ToString()} was not invoked");
+                            Console.WriteLine("ProcessReceive -> invalid json data");
+                            ProcessConnectionError(user.Value);
+                            break;
                         }
                     }
-                    else
+                    else if (socketError == SocketError.ConnectionReset)
                     {
-                        Console.WriteLine("ProcessReceive -> invalid json data");
+                        Console.WriteLine("ProcessReceive -> connected user fail");
                         ProcessConnectionError(user.Value);
+                        break;
                     }
-                }
-                else if (socketError == SocketError.ConnectionReset)
-                {
-                    Console.WriteLine("ProcessReceive -> connected user fail");
-                    ProcessConnectionError(user.Value);
                 }
             }
         }
@@ -66,30 +78,25 @@ namespace TBS_GameServer.Network
         public void Init(EventsManagerInstance eventsManager, List<ConnectedPlayerData> readyPlayers)
         {
             m_EventsManager = eventsManager;
+
             m_readyPlayers = new Dictionary<string, ConnectedPlayerData>();
             for (int index = 0; index < readyPlayers.Count; ++index)
             {
                 m_readyPlayers.Add(LoadableData.Ids[index], readyPlayers[index]);
             }
 
-            PlayersConnectedDelegate playersConnectedDelegate;
-            if (m_EventsManager.TryGetDelegate(DelegateType.PlayersConnected, out playersConnectedDelegate))
-            {
-                playersConnectedDelegate.Invoke();
-            }
-            else
-            {
-                Console.Write($"{DelegateType.PlayersConnected.ToString()} was not invoked");
-            }
+            m_IsActive = true;
         }
 
         void ProcessConnectionError(ConnectedPlayerData user)
         {
+            m_IsActive = false;
             user.socket.Close();
+
             ConnectionErrorDelegate connectionErrorDelegate;
             if (m_EventsManager.TryGetDelegate(DelegateType.ConnectionError, out connectionErrorDelegate))
             {
-                connectionErrorDelegate.Invoke();
+                Task.Run(() => connectionErrorDelegate.Invoke());
             }
             else
             {
@@ -98,6 +105,8 @@ namespace TBS_GameServer.Network
         }
 
         EventsManagerInstance m_EventsManager = null;
-        Dictionary<string, ConnectedPlayerData> m_readyPlayers;
+
+        Dictionary<string, ConnectedPlayerData> m_readyPlayers = null;
+        bool m_IsActive = false;
     }
 }

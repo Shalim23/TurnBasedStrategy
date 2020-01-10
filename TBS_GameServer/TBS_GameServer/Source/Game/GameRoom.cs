@@ -1,24 +1,49 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using TBS_GameServer.Network;
-using TBS_GameServer.Game;
-using TBS_GameServer.Events;
+using TBS_GameServer.Source.Network;
+using TBS_GameServer.Source.Game;
+using TBS_GameServer.Source.Events;
 
 namespace TBS_GameServer.Source.Game
 {
     class GameRoom
     {
-        public void Init(List<ConnectedPlayerData> connectedPlayers)
+        public delegate void OnRoomShutdown(string RoomId);
+
+        public void Init(string roomId, List<ConnectedPlayerData> connectedPlayers, OnRoomShutdown onRoomShutdownCallback)
         {
+            m_RoomId = roomId;
+            m_OnRoomShutdownCallback = onRoomShutdownCallback;
+
             m_EventsManager = new EventsManagerInstance();
             m_EventsManager.Init();
 
             m_GameInstance = new GameManagerInstance();
-            m_GameInstance.Init(m_EventsManager);
+            m_GameInstance.Init(m_EventsManager, connectedPlayers.Count);
+
+            m_NetworkManager = new NetworkManagerInstance();
+            m_NetworkManager.Init(m_EventsManager, connectedPlayers);
         }
+
+        public void Run()
+        {
+            m_NetworkManager.StartMessageProcessing();
+
+            Shutdown();
+        }
+
+        void Shutdown()
+        {
+            m_OnRoomShutdownCallback(m_RoomId);
+        }
+
+        OnRoomShutdown m_OnRoomShutdownCallback = null;
 
         EventsManagerInstance m_EventsManager = null;
         GameManagerInstance m_GameInstance = null;
+        NetworkManagerInstance m_NetworkManager = null;
+
+        string m_RoomId = null;
     }
 }

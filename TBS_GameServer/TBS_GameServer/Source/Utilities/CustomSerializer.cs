@@ -2,7 +2,7 @@
 using System.IO;
 using System.Text;
 
-namespace TBS_GameServer.Utilities
+namespace TBS_GameServer.Source.Utilities
 {
     public static class CustomSerializer
     {

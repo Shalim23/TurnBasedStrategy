@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Timers;
 using System.Net.Sockets;
-using TBS_GameServer.Utilities;
+using TBS_GameServer.Source.Utilities;
 using System.Text.Json;
 
-namespace TBS_GameServer.Network.PlayerConnection
+namespace TBS_GameServer.Source.Network
 {
     class PlayersReadinessHandler
     {

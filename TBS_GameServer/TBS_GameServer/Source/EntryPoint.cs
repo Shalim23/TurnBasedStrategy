@@ -1,9 +1,5 @@
-﻿using TBS_GameServer.Network;
-using TBS_GameServer.Game;
-using TBS_GameServer.Events;
-using TBS_GameServer.Utilities;
-
-namespace TBS_GameServer
+﻿
+namespace TBS_GameServer.Source.Source
 {
     class EntryPoint
     {
@@ -14,30 +10,9 @@ namespace TBS_GameServer
          */
         static void Main(string[] args)
         {
-            JsonDataLoader.LoadJsonData();
-
-            Init();
-
-            NetworkManagerInstance networkManager = NetworkManagerInstance.GetInstance();
-
-            networkManager.ProcessPlayerConnection();
-            networkManager.StartMessageProcessing();
-
-            CleanUp();
-        }
-
-        static void Init()
-        {
-            EventsManagerInstance.GetInstance().Init();
-            NetworkManagerInstance.GetInstance().Init();
-            GameManagerInstance.GetInstance().Init();
-        }
-
-        static void CleanUp()
-        {
-            NetworkManagerInstance.GetInstance().CleanUp();
-            GameManagerInstance.GetInstance().CleanUp();
-            EventsManagerInstance.GetInstance().CleanUp();
+            GameServerInstance gameServerInstance = new GameServerInstance();
+            gameServerInstance.Init();
+            gameServerInstance.Run();
         }
     }
 }

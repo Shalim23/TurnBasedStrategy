@@ -1,13 +1,13 @@
-﻿using TBS_GameServer.Network.PlayerConnection;
+﻿using TBS_GameServer.Source.Network;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Collections.Generic;
-using TBS_GameServer.Events;
+using TBS_GameServer.Source.Events;
 
-using static TBS_GameServer.Events.Delegates;
+using static TBS_GameServer.Source.Events.Delegates;
 
 
-namespace TBS_GameServer.Network
+namespace TBS_GameServer.Source.Network
 {
     class NetworkManagerInstance
     {
@@ -22,32 +22,26 @@ namespace TBS_GameServer.Network
             SubscribeOnEvents();
 
             m_MessageHandler = new MessageHandler();
-            m_MessageHandler.Init();
+            m_MessageHandler.Init(m_EventsManager);
 
             m_SocketsHandler = new SocketsHandler();
-            m_SocketsHandler.Activate(connectedPlayers);
-
-            m_IsActive = true;
+            m_SocketsHandler.Init(m_EventsManager, connectedPlayers);
         }
 
         public void StartMessageProcessing()
         {
-            while(m_IsActive)
-            {
-                m_SocketsHandler.ProcessReceive();
-            }
+            m_SocketsHandler.ProcessReceive();
         }
 
         void OnConnectionError()
         {
             m_SocketsHandler.SendConnectionError();
-            m_IsActive = false;
         }
 
         EventsManagerInstance m_EventsManager = null;
         SocketsHandler m_SocketsHandler = null;
         MessageHandler m_MessageHandler = null;
 
-        bool m_IsActive = false;
+        
     }
 }

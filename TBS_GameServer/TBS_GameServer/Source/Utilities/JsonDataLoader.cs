@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 
-namespace TBS_GameServer.Utilities
+namespace TBS_GameServer.Source.Utilities
 {
     static class LoadableData
     {
@@ -14,6 +14,7 @@ namespace TBS_GameServer.Utilities
     {
         public static void LoadJsonData()
         {
+            Console.WriteLine("Loading Json data...");
             LoadIds();
         }
 
@@ -34,6 +35,7 @@ namespace TBS_GameServer.Utilities
             }
 
             LoadableData.Ids = ids;
+            Console.WriteLine("Ids loaded...");
         }
     }
 }

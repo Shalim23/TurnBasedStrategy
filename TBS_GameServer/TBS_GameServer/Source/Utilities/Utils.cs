@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text;
 using System.IO;
-using TBS_GameServer.Network;
+using TBS_GameServer.Source.Network;
 
-namespace TBS_GameServer.Utilities
+namespace TBS_GameServer.Source.Utilities
 {
     static class Utils
     {
-        
         static public List<T> ShuffleList<T>(List<T> list)
         {
             Random rand = new Random();
@@ -107,5 +106,41 @@ namespace TBS_GameServer.Utilities
             connectedPlayerData.state = newState;
             connectedPlayerData.socket.Close();
         }
+
+        static public string GetNextRoomId(string currentId)
+        {
+            if(LatinAlphabet == null)
+            {
+                LatinAlphabet = new List<char>();
+                for(char c = 'A'; c <= 'Z'; ++c)
+                {
+                    LatinAlphabet.Add(c);
+                }
+            }
+
+            string newId;
+            if(currentId != null && currentId.Length > 0)
+            {
+                char lastChar = currentId[currentId.Length - 1];
+                int nextCharIndex = LatinAlphabet.IndexOf(lastChar) + 1;
+
+                if(nextCharIndex >= LatinAlphabet.Count)
+                {
+                    newId = currentId + LatinAlphabet[0].ToString();
+                }
+                else
+                {
+                    newId = LatinAlphabet[nextCharIndex].ToString();
+                }
+            }
+            else
+            {
+                newId = LatinAlphabet[0].ToString();
+            }
+
+            return newId;
+        }
+
+        static List<char> LatinAlphabet = null;
     }
 }
