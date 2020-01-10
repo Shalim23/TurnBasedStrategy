@@ -13,5 +13,5 @@ public:
     void Init() override;
 
 private:
-    GameRulesDataHelper m_GameRulesDataHelper;
+    GameRulesDataHelper m_GameRulesDataHelper; //#TODO reuse after creating TBS game rules
 };
