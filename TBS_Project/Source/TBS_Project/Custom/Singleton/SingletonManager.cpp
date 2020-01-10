@@ -18,7 +18,6 @@ void SingletonManager::Shutdown()
 {
     if (m_IsInitialized)
     {
-
         ChangeInitializationState();
     }
 }
