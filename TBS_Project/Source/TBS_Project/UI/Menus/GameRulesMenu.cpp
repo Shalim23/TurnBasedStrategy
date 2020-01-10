@@ -1,27 +1,47 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "GameRulesMenu.h"
+#include "UObject/ConstructorHelpers.h"
+#include "Components/WidgetComponent.h"
+#include "Custom/Events/Events.h"
 
-// Sets default values
 AGameRulesMenu::AGameRulesMenu()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = false;
 
+    m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("GameRulesWidget"));
+    ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/GameRulesWidget"));
+    if (widget.Succeeded())
+    {
+        m_widget->SetWidgetClass(widget.Class);
+    }
 }
 
-// Called when the game starts or when spawned
+void AGameRulesMenu::OnReturnToMainMenu(const EventData& eventData)
+{
+    if (eventData.eventType != GameplayEventType::ReturnToMainMenu)
+    {
+        return;
+    }
+
+    m_EventsHandler.unsubscribe();
+    Destroy();
+}
+
+void AGameRulesMenu::SubcribeOnEvents()
+{
+    m_EventsHandler.subscribe({
+        {GameplayEventType::ReturnToMainMenu, [this](const EventData& eventData) { OnReturnToMainMenu(eventData); }},
+        });
+}
+
 void AGameRulesMenu::BeginPlay()
 {
-	Super::BeginPlay();
-	
+    Super::BeginPlay();
+
+    SubcribeOnEvents();
 }
 
-// Called every frame
 void AGameRulesMenu::Tick(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
+    Super::Tick(DeltaTime);
 
 }
-

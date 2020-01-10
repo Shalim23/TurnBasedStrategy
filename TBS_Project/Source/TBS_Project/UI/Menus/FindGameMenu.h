@@ -1,26 +1,42 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Custom/Events/EventsHandler.h"
 #include "FindGameMenu.generated.h"
+
+class UWidgetComponent;
+struct EventData;
 
 UCLASS()
 class TBS_PROJECT_API AFindGameMenu : public AActor
 {
-	GENERATED_BODY()
-	
-public:	
-	// Sets default values for this actor's properties
-	AFindGameMenu();
+    GENERATED_BODY()
+
+public:
+    AFindGameMenu();
+    void Tick(float DeltaTime) override;
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+    void BeginPlay() override;
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+private:
 
+    void OnReturnToMainMenu(const EventData& eventData);
+    void OnNoServerConnection(const EventData& eventData);
+    void OnConnectedToServer(const EventData& eventData);
+    void OnGameFound(const EventData& eventData);
+    void OnAllPlayersReady(const EventData& eventData);
+    void OnNotReady(const EventData& eventData);
+    void OnWaitingForPlayers(const EventData& eventData);
+
+    void OnWidgetConstructed();
+
+    void SubcribeOnEvents();
+
+private:
+    UPROPERTY()
+        UWidgetComponent* m_widgetComponent;
+
+    EventsHandler m_EventsHandler;
 };
