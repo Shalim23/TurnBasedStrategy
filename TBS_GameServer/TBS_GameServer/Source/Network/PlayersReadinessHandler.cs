@@ -83,19 +83,19 @@ namespace TBS_GameServer.Source.Network
                         else if (message == NetworkDataConsts.ClientCancelMessage)
                         {
                             Console.WriteLine("ProcessMessagesFromPlayers -> cancel from player");
-                            Utils.QueueUserToRemove(user, ConnectedSocketState.Canceled);
+                            QueueUserToRemove(user, ConnectedSocketState.Canceled);
                         }
                     }
                     else
                     {
                         Console.WriteLine("ProcessMessagesFromPlayers -> invalid json data");
-                        Utils.QueueUserToRemove(user, ConnectedSocketState.InvalidData);
+                        QueueUserToRemove(user, ConnectedSocketState.InvalidData);
                     }
                 }
                 else if (socketError == SocketError.ConnectionReset)
                 {
                     Console.WriteLine("ProcessMessagesFromPlayers -> connected user fail");
-                    Utils.QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
+                    QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
                 }
             }
         }
@@ -125,7 +125,7 @@ namespace TBS_GameServer.Source.Network
                     if (socketError == SocketError.ConnectionReset)
                     {
                         Console.WriteLine("OnReadinessTimeElapsed -> connected user fail");
-                        Utils.QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
+                        QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
                     }
                 }
             }
@@ -150,7 +150,7 @@ namespace TBS_GameServer.Source.Network
                 if (socketError == SocketError.ConnectionReset)
                 {
                     Console.WriteLine("RestartPlayersConnection -> connected user fail");
-                    Utils.QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
+                    QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
                 }
             }
 
@@ -182,7 +182,7 @@ namespace TBS_GameServer.Source.Network
                 if (socketError == SocketError.ConnectionReset)
                 {
                     Console.WriteLine("CheckPlayersReadiness -> connected user error");
-                    Utils.QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
+                    QueueUserToRemove(user, ConnectedSocketState.ConnectionLost);
                 }
             }
 

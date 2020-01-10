@@ -53,7 +53,7 @@ namespace TBS_GameServer.Source.Utilities
                 }
             }
 
-            element = new JsonElement();
+            element = new JsonElement(); //cannot be null
             return false;
         }
 
@@ -99,12 +99,6 @@ namespace TBS_GameServer.Source.Utilities
             StreamReader reader = new StreamReader(memoryStream);
 
             return Encoding.ASCII.GetBytes(reader.ReadToEnd());
-        }
-
-        static public void QueueUserToRemove(ConnectedPlayerData connectedPlayerData, ConnectedSocketState newState)
-        {
-            connectedPlayerData.state = newState;
-            connectedPlayerData.socket.Close();
         }
 
         static public string GetNextRoomId(string currentId)
