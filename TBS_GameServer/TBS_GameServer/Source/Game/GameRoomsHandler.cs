@@ -10,11 +10,6 @@ namespace TBS_GameServer.Source.Game
 {
     class GameRoomsHandler
     {
-        
-        public void Init()
-        {
-
-        }
         public void CreateRoom(List<ConnectedPlayerData> connectedPlayers)
         {
             m_NextRoomId = Utils.GetNextRoomId(m_NextRoomId);

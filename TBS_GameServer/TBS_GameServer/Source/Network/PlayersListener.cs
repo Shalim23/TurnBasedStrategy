@@ -2,19 +2,19 @@
 using System.Net;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+
 using TBS_GameServer.Source.Utilities;
-using System.Text.Json;
+using static TBS_GameServer.Source.Network.NetworkHelper;
 
 
 namespace TBS_GameServer.Source.Network
 {
-    /*#TODO implement kind of matchmaking
-     * implement players amount selection from client side
-     */
+    public delegate void OnPlayersConnected(List<ConnectedPlayerData> connectedPlayers);
+
     class PlayersListener
     {
-        
-        public void Init()
+        public void Init(OnPlayersConnected onPlayersConnectedCallback)
         {
             m_Listener =
                 new TcpListener(IPAddress.Parse(NetworkDataConsts.Ip), NetworkDataConsts.Port);
@@ -22,11 +22,16 @@ namespace TBS_GameServer.Source.Network
             m_PendingPlayers = new Dictionary<int, List<ConnectedPlayerData>>();
             m_PendingPlayersAfterConnectionError = new List<ConnectedPlayerData>();
 
+            m_OnPlayersConnectedCallback = onPlayersConnectedCallback;
+
             m_IsActive = true;
         }
 
         public void Run()
         {
+            m_Listener.Start();
+
+            Console.WriteLine($"Started listening...");
             while (m_IsActive)
             {
                 Socket handler = TryAcceptUserConnection();
@@ -38,6 +43,16 @@ namespace TBS_GameServer.Source.Network
                 CheckCancelFromPlayers();
                 CheckPendingUsersAfterConnectionError();
             }
+        }
+
+        public void OnRestartAfterReadinessFailed(List<ConnectedPlayerData> connectedPlayers)
+        {
+            lock(ListenerLock)
+            {
+                m_PendingPlayersAfterConnectionError.AddRange(connectedPlayers);
+            }
+
+            m_HasPendingUsersAfterConnectionError = true;
         }
 
         void AddNewConnectedUser(int searchedPlayerAmount, Socket handler)
@@ -57,8 +72,9 @@ namespace TBS_GameServer.Source.Network
                 {
                     Console.WriteLine($"Readiness check for {searchedPlayerAmount} players room");
                     FinalizeConnection(pendingPlayersForSearchedAmount);
-                    //#TODO invoke callback for readiness check
-                    //remove entry
+
+                    Task.Run(() => m_OnPlayersConnectedCallback(pendingPlayersForSearchedAmount));
+                    m_PendingPlayers.Remove(searchedPlayerAmount);
                 }
             }
             else
@@ -77,7 +93,7 @@ namespace TBS_GameServer.Source.Network
                 m_PendingPlayers.Add(searchedPlayerAmount, newPendingPlayerForSearchedAmount);
             }
         }
-
+ 
         void ProcessNewConnectedUser(Socket handler)
         {
             byte[] buffer = new byte[NetworkDataConsts.DataSize];
@@ -85,40 +101,10 @@ namespace TBS_GameServer.Source.Network
 
             if (handler.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError) > 0)
             {
-                JsonElement message;
-                if (!Utils.TryGetValidMessageJsonObject(buffer, out message))
+                int searchedPlayerAmount = 0;
+                if(TryParseNewConnectedUserMessage(buffer, out searchedPlayerAmount))
                 {
-                    Console.WriteLine("ProcessNewConnectedUser -> invalid data was sent on connection");
-                    return;
-                }
-
-                JsonElement messageName;
-                if (!message.TryGetProperty(NetworkDataConsts.MessageNameJsonKey, out messageName)
-                || messageName.ValueKind != JsonValueKind.String
-                || messageName.GetString() != NetworkDataConsts.ClientConnectionMessage)
-                {
-                    Console.WriteLine("ProcessNewConnectedUser -> invalid message was sent on connection");
-                    return;
-                }
-
-                JsonElement playersAmountEntry;
-                if (message.TryGetProperty(NetworkDataConsts.PlayersAmountJsonKey, out playersAmountEntry)
-                    && playersAmountEntry.ValueKind == JsonValueKind.Number)
-                {
-                    int playersAmount = playersAmountEntry.GetInt32();
-                    //#TODO change to MinPlayers constant after debug
-                    if(playersAmount > 0 && playersAmount <= NetworkDataConsts.MaxPlayers)
-                    {
-                        AddNewConnectedUser(playersAmount, handler);
-                    }
-                    else
-                    {
-                        Console.WriteLine("ProcessNewConnectedUser -> invalid PlayersAmount was sent on connection");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("ProcessNewConnectedUser -> invalid PlayersAmount entry was sent on connection");
+                    AddNewConnectedUser(searchedPlayerAmount, handler);
                 }
             }
             else
@@ -160,23 +146,6 @@ namespace TBS_GameServer.Source.Network
             return handler;
         }
 
-        bool IsCancelMessage(byte[] data)
-        {
-            JsonElement message;
-            if(Utils.TryGetValidMessageJsonObject(data, out message))
-            {
-                JsonElement messageName;
-                if (message.TryGetProperty(NetworkDataConsts.MessageNameJsonKey, out messageName)
-                    && messageName.ValueKind == JsonValueKind.String
-                    && messageName.GetString() == NetworkDataConsts.ClientCancelMessage)
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
         void CheckCancelFromPlayers()
         {
             foreach (KeyValuePair<int, List<ConnectedPlayerData>> players in m_PendingPlayers)
@@ -189,7 +158,7 @@ namespace TBS_GameServer.Source.Network
                     int receivesBytes = player.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
                     if (receivesBytes > 0)
                     {
-                        if (IsCancelMessage(buffer))
+                        if (TryParseCancelMessage(buffer))
                         {
                             Console.WriteLine("CheckCancelFromPlayers -> cancel from player");
                             Utils.QueueUserToRemove(player, ConnectedSocketState.Canceled);
@@ -222,27 +191,34 @@ namespace TBS_GameServer.Source.Network
 
         void CheckPendingUsersAfterConnectionError()
         {
-            if(m_HasPendingUsersAfterConnectionError)
+            if(!m_HasPendingUsersAfterConnectionError)
             {
-                lock(ListenerLock)
-                {
-                    m_HasPendingUsersAfterConnectionError = false;
-                    foreach(ConnectedPlayerData player in m_PendingPlayersAfterConnectionError)
-                    {
-                        AddNewConnectedUser(player.searchedPlayersAmount, player.socket);
-                    }
+                return;
+            }
 
-                    m_PendingPlayersAfterConnectionError.Clear();
+            lock (ListenerLock)
+            {
+                foreach (ConnectedPlayerData player in m_PendingPlayersAfterConnectionError)
+                {
+                    AddNewConnectedUser(player.searchedPlayersAmount, player.socket);
                 }
+
+                m_PendingPlayersAfterConnectionError.Clear();
+
+                m_HasPendingUsersAfterConnectionError = false;
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////
+        
         bool m_IsActive = false;
         bool m_HasPendingUsersAfterConnectionError = false;
 
         TcpListener m_Listener = null;
         Dictionary<int, List<ConnectedPlayerData>> m_PendingPlayers = null;
         List<ConnectedPlayerData> m_PendingPlayersAfterConnectionError = null;
+
+        OnPlayersConnected m_OnPlayersConnectedCallback = null;
 
         static readonly object ListenerLock = new object();
     }

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace TBS_GameServer.Source.Network
 {
-    enum ConnectedSocketState
+    public enum ConnectedSocketState
     {
         WaitingForPlayers,
         Ready,
@@ -12,17 +12,11 @@ namespace TBS_GameServer.Source.Network
         InvalidData
     }
 
-    class ConnectedPlayerData
+    public class ConnectedPlayerData
     {
         public Socket socket;
         public ConnectedSocketState state;
         public int searchedPlayersAmount;
-    }
-
-    class ConnectedPlayers
-    {
-        public int Amount;
-        public List<ConnectedPlayerData> connectedPlayers;
     }
     
     static class NetworkDataConsts

@@ -2,90 +2,68 @@
 using System.Collections.Generic;
 using System.Timers;
 using System.Net.Sockets;
+using System.Threading.Tasks;
+
 using TBS_GameServer.Source.Utilities;
-using System.Text.Json;
+using static TBS_GameServer.Source.Network.NetworkHelper;
 
 namespace TBS_GameServer.Source.Network
 {
+    public delegate void OnPlayersReady(List<ConnectedPlayerData> connectedPlayers);
+    public delegate void OnRestartConnection(List<ConnectedPlayerData> connectedPlayers);
+
     class PlayersReadinessHandler
     {
-        public List<ConnectedPlayerData> WaitForPlayersReadiness(List<ConnectedPlayerData> connectedPlayers)
+        public void Init(List<ConnectedPlayerData> connectedPlayers, OnPlayersReady onPlayersReadyCallback, OnRestartConnection onRestartConnectionCallback)
         {
-            List<ConnectedPlayerData> pendingPlayers = new List<ConnectedPlayerData>(connectedPlayers);
+            m_ConnectedPlayersInProcess = connectedPlayers;
+            m_ConnectedPlayersCount = m_ConnectedPlayersInProcess.Count;
+
+            m_OnPlayersReadyCallback = onPlayersReadyCallback;
+            m_OnRestartConnectionCallback = onRestartConnectionCallback;
+        }
+        public void Run()
+        {
             Console.WriteLine("Waiting for players' readiness");
 
-            ResetData();
-            ActivateReadinessTimer();
-
-            while (!m_IsTimerElapsed)
-            {
-                ProcessMessagesFromPlayers(pendingPlayers);
-
-                RemoveInactiveUsers(pendingPlayers);
-
-                if (pendingPlayers.Count != connectedPlayers.Count)
-                {
-                    RestartPlayersConnection(pendingPlayers);
-                    break;
-                }
-
-                CheckPlayersReadiness(pendingPlayers);
-                if (m_ReadyPlayersCount == connectedPlayers.Count)
-                {
-                    Console.WriteLine("Players are ready!");
-                    break;
-                }
-            }
-
-            if (m_IsTimerElapsed)
-            {
-                FilterReadyPlayers(pendingPlayers);
-                RestartPlayersConnection(pendingPlayers);
-            }
-
-            return pendingPlayers;
-        }
-
-        private void ResetData()
-        {
-            m_IsTimerElapsed = false;
-            m_ReadyPlayersCount = 0;
-        }
-
-        private void ActivateReadinessTimer()
-        {
             m_ReadinessTimer = new Timer(NetworkDataConsts.ReadinessTimeMs);
             m_ReadinessTimer.Elapsed += delegate { m_IsTimerElapsed = true; };
             m_ReadinessTimer.Enabled = true;
+
+            while (!m_IsTimerElapsed)
+            {
+                ProcessMessagesFromPlayers();
+
+                RemoveInactiveUsers();
+
+                if (m_ConnectedPlayersCount != m_ConnectedPlayersInProcess.Count)
+                {
+                    RestartPlayersConnection();
+                    return;
+                }
+
+                CheckPlayersReadiness();
+                if (m_ReadyPlayersCount == m_ConnectedPlayersCount)
+                {
+                    Console.WriteLine("Players are ready!");
+                    Task.Run(() => m_OnPlayersReadyCallback(m_ConnectedPlayersInProcess));
+                    return;
+                }
+            }
+
+            FilterReadyPlayers();
+            RestartPlayersConnection();
         }
 
-        private void DeactivateReadinessTimer()
+        void DeactivateReadinessTimer()
         {
             m_ReadinessTimer.Enabled = false;
             m_ReadinessTimer = null;
         }
 
-        bool TryProcessMessage(byte[] data, out string messageNameValue)
+        void ProcessMessagesFromPlayers()
         {
-            JsonElement message;
-            if (Utils.TryGetValidMessageJsonObject(data, out message))
-            {
-                JsonElement messageName;
-                if (message.TryGetProperty(NetworkDataConsts.MessageNameJsonKey, out messageName)
-                    && messageName.ValueKind == JsonValueKind.String)
-                {
-                    messageNameValue = messageName.GetString();
-                    return true;
-                }
-            }
-
-            messageNameValue = "";
-            return false;
-        }
-
-        private void ProcessMessagesFromPlayers(List<ConnectedPlayerData> pendingPlayers)
-        {
-            foreach (ConnectedPlayerData user in pendingPlayers)
+            foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {
                 byte[] buffer = new byte[NetworkDataConsts.DataSize];
                 SocketError socketError;
@@ -94,10 +72,9 @@ namespace TBS_GameServer.Source.Network
                 if (receivesBytes > 0)
                 {
                     string message;
-                    if(TryProcessMessage(buffer, out message))
+                    if(TryProcessReadyMessage(buffer, out message))
                     {
-                        if (message == NetworkDataConsts.IsReadyMessage
-                        && user.state != ConnectedSocketState.Ready)
+                        if (message == NetworkDataConsts.IsReadyMessage && user.state != ConnectedSocketState.Ready)
                         {
                             user.state = ConnectedSocketState.Ready;
                             ++m_ReadyPlayersCount;
@@ -123,15 +100,15 @@ namespace TBS_GameServer.Source.Network
             }
         }
 
-        private void RemoveInactiveUsers(List<ConnectedPlayerData> pendingPlayers)
+        void RemoveInactiveUsers()
         {
-            pendingPlayers.RemoveAll(userInfo =>
+            m_ConnectedPlayersInProcess.RemoveAll(userInfo =>
             userInfo.state == ConnectedSocketState.Canceled
             || userInfo.state == ConnectedSocketState.ConnectionLost
             || userInfo.state == ConnectedSocketState.InvalidData);
         }
 
-        private void FilterReadyPlayers(List<ConnectedPlayerData> pendingPlayers)
+        void FilterReadyPlayers()
         {
             Console.WriteLine("OnReadinessTimeElapsed -> not all accepted");
 
@@ -139,7 +116,7 @@ namespace TBS_GameServer.Source.Network
             values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.NotReadyMessage);
             byte[] buffer = Utils.JsonMessagePacker(values);
 
-            foreach (ConnectedPlayerData user in pendingPlayers)
+            foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {
                 if (user.state == ConnectedSocketState.WaitingForPlayers)
                 {
@@ -153,10 +130,10 @@ namespace TBS_GameServer.Source.Network
                 }
             }
 
-            pendingPlayers.RemoveAll(user => user.state != ConnectedSocketState.Ready);
+            m_ConnectedPlayersInProcess.RemoveAll(user => user.state != ConnectedSocketState.Ready);
         }
 
-        private void RestartPlayersConnection(List<ConnectedPlayerData> pendingPlayers)
+        void RestartPlayersConnection()
         {
             DeactivateReadinessTimer();
 
@@ -164,7 +141,7 @@ namespace TBS_GameServer.Source.Network
             values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.WaitingForPlayersMessage);
             byte[] buffer = Utils.JsonMessagePacker(values);
 
-            foreach (ConnectedPlayerData user in pendingPlayers)
+            foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {
                 user.state = ConnectedSocketState.WaitingForPlayers;
 
@@ -177,14 +154,15 @@ namespace TBS_GameServer.Source.Network
                 }
             }
 
-            RemoveInactiveUsers(pendingPlayers);
+            RemoveInactiveUsers();
 
             Console.WriteLine("Restarting players connection...");
+            Task.Run(() => m_OnRestartConnectionCallback(m_ConnectedPlayersInProcess));
         }
 
-        private void CheckPlayersReadiness(List<ConnectedPlayerData> pendingPlayers)
+        void CheckPlayersReadiness()
         {
-            if (m_ReadyPlayersCount != pendingPlayers.Count)
+            if (m_ReadyPlayersCount != m_ConnectedPlayersCount)
             {
                 return;
             }
@@ -196,7 +174,7 @@ namespace TBS_GameServer.Source.Network
             values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.AllAreReadyMessage);
             byte[] buffer = Utils.JsonMessagePacker(values);
 
-            foreach (ConnectedPlayerData user in pendingPlayers)
+            foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {
                 SocketError socketError;
 
@@ -208,12 +186,18 @@ namespace TBS_GameServer.Source.Network
                 }
             }
 
-            pendingPlayers.RemoveAll(user => user.state != ConnectedSocketState.Ready);
-            m_ReadyPlayersCount = pendingPlayers.Count;
+            m_ConnectedPlayersInProcess.RemoveAll(user => user.state != ConnectedSocketState.Ready);
+            m_ReadyPlayersCount = m_ConnectedPlayersInProcess.Count;
         }
 
         bool m_IsTimerElapsed = false;
         int m_ReadyPlayersCount = 0;
+        int m_ConnectedPlayersCount = 0;
+
         Timer m_ReadinessTimer = null;
+        List<ConnectedPlayerData> m_ConnectedPlayersInProcess = null;
+
+        OnPlayersReady m_OnPlayersReadyCallback = null;
+        OnRestartConnection m_OnRestartConnectionCallback = null;
     }
 }
