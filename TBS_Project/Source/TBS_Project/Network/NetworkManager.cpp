@@ -18,12 +18,9 @@ void ANetworkManager::BeginPlay()
     m_NetworkSocketHandler.SetMessageFromServerCallback(
         [this](const TSharedPtr<FJsonObject>& jsonObject) { ProcessMessage(jsonObject); });
 
-    m_NetworkSocketHandler.SetSendErrorCallback(
-        [this]() { OnConnectionError(); });
+    m_NetworkSocketHandler.SetSendErrorCallback([this]() { OnConnectionError(); });
 
     m_NetworkMessagesHandler.Init();
-
-    Connect();
 }
 
 void ANetworkManager::OnReturnToMainMenu(const EventData& eventData)
@@ -53,10 +50,25 @@ void ANetworkManager::OnPlayerReady(const EventData& eventData)
     }
 }
 
-void ANetworkManager::Connect()
+void ANetworkManager::OnFindGame(const EventData& eventData)
+{
+    if (eventData.eventType == GameplayEventType::FindGame)
+    {
+        const FindGameEventData& findGameEventData =
+            static_cast<const FindGameEventData&>(eventData);
+
+        Connect(findGameEventData.playerAmountToSearch);
+    }
+}
+
+void ANetworkManager::Connect(int playersAmountToSearch)
 {
     if (m_NetworkSocketHandler.TryConnect())
     {
+        TSharedPtr<FJsonObject> messageObject = MakeShareable(new FJsonObject);
+        messageObject->SetNumberField(PlayersAmountJsonKey, playersAmountToSearch);
+        m_NetworkSocketHandler.Send(messageObject);
+        
         m_IsConnected = true;
         SetActorTickEnabled(true);
 
@@ -78,15 +90,15 @@ void ANetworkManager::Connect()
 
 void ANetworkManager::Shutdown()
 {
+    SetActorTickEnabled(false);
     m_NetworkSocketHandler.Shutdown();
-    m_EventsHandler.unsubscribe();
-    Destroy();
 }
 
 void ANetworkManager::SubscribeOnEvents()
 {
     m_EventsHandler.subscribe({
         {GameplayEventType::ReturnToMainMenu, [this](const EventData& eventData) { OnReturnToMainMenu(eventData); }},
+        {GameplayEventType::FindGame, [this](const EventData& eventData) { OnFindGame(eventData); }},
         {GameplayEventType::ReadyForGame, [this](const EventData& eventData) { OnPlayerReady(eventData); }},
         });
 }

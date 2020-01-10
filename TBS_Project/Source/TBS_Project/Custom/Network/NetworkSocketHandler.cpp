@@ -24,25 +24,29 @@ void NetworkSocketHandler::Shutdown()
 
 void NetworkSocketHandler::Receive()
 {
-    m_Socket->Recv(m_Buffer, m_NetMessageSize, m_BytesRead);
-    if (m_BytesRead > 0)
+    if (m_Socket)
     {
-        FString jsonString(UTF8_TO_TCHAR(m_Buffer));
-        TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
-        TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(jsonString);
-
-        if (FJsonSerializer::Deserialize(jsonReader, jsonObject) && jsonObject.IsValid())
+        m_Socket->Recv(m_Buffer, m_NetMessageSize, m_BytesRead);
+        if (m_BytesRead > 0)
         {
-            const TSharedPtr<FJsonObject>* messageObject = nullptr;
-            if (jsonObject->TryGetObjectField(CitadelsGameMessageJsonKey, messageObject))
-            {
-                ProcessReceivedData(*messageObject);
-            }
-        }
+            FString jsonString(UTF8_TO_TCHAR(m_Buffer));
+            TSharedPtr<FJsonObject> jsonObject = MakeShareable(new FJsonObject());
+            TSharedRef<TJsonReader<>> jsonReader = TJsonReaderFactory<>::Create(jsonString);
 
-        m_BytesRead = 0;
-        memset(m_Buffer, 0, sizeof(m_Buffer));
+            if (FJsonSerializer::Deserialize(jsonReader, jsonObject) && jsonObject.IsValid())
+            {
+                const TSharedPtr<FJsonObject>* messageObject = nullptr;
+                if (jsonObject->TryGetObjectField(TBSGameMessageJsonKey, messageObject))
+                {
+                    ProcessReceivedData(*messageObject);
+                }
+            }
+
+            m_BytesRead = 0;
+            memset(m_Buffer, 0, sizeof(m_Buffer));
+        }
     }
+
 }
 
 bool NetworkSocketHandler::TryConnect()
@@ -72,7 +76,7 @@ bool NetworkSocketHandler::TryConnect()
 void NetworkSocketHandler::Send(const TSharedPtr<FJsonObject>& jsonObject)
 {
     TSharedPtr<FJsonObject> rootObject = MakeShareable(new FJsonObject);
-    rootObject->SetObjectField(CitadelsGameMessageJsonKey, jsonObject);
+    rootObject->SetObjectField(TBSGameMessageJsonKey, jsonObject);
 
     FString jsonString;
     TSharedRef<TJsonWriter<>> writer = TJsonWriterFactory<>::Create(&jsonString);

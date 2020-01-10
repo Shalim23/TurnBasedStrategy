@@ -25,13 +25,13 @@ namespace TBS_GameServer.Source.Network
             m_OnPlayersConnectedCallback = onPlayersConnectedCallback;
 
             m_IsActive = true;
+
+            m_Listener.Start();
+            Console.WriteLine($"Started listening...");
         }
 
         public void Run()
         {
-            m_Listener.Start();
-
-            Console.WriteLine($"Started listening...");
             while (m_IsActive)
             {
                 Socket handler = TryAcceptUserConnection();
@@ -134,7 +134,7 @@ namespace TBS_GameServer.Source.Network
             RemoveInactiveUsers();
         }
 
-        private Socket TryAcceptUserConnection()
+        Socket TryAcceptUserConnection()
         {
             Socket handler = null;
             if (m_Listener.Pending())

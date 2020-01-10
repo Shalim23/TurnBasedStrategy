@@ -23,7 +23,7 @@ namespace TBS_GameServer.Source
         {
             while (true)
             {
-                Task.Run(() => m_PlayersListener.Run());
+                m_PlayersListener.Run();
             }
         }
 

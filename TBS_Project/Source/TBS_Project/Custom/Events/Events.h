@@ -156,9 +156,12 @@ struct FindGameEventData : public EventData
 {
     using Super = EventData;
 
-    FindGameEventData()
+    FindGameEventData(int _playerAmountToSearch)
         : Super(GameplayEventType::FindGame)
+        , playerAmountToSearch(_playerAmountToSearch)
     {}
+
+    int playerAmountToSearch = 0;
 };
 
 struct ReadyForGameEventData : public EventData

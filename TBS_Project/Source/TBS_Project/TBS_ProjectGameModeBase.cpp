@@ -1,5 +1,6 @@
 #include "TBS_ProjectGameModeBase.h"
 #include "UI/Menus/MainMenu.h"
+#include "Network/NetworkManager.h"
 
 void ATBS_ProjectGameModeBase::BeginPlay()
 {
@@ -13,4 +14,5 @@ void ATBS_ProjectGameModeBase::BeginPlay()
     }
 
     GetWorld()->SpawnActor<AMainMenu>();
+    GetWorld()->SpawnActor<ANetworkManager>();
 }

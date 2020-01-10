@@ -129,12 +129,10 @@ void AFindGameMenu::BeginPlay()
     Super::BeginPlay();
 
     SubcribeOnEvents();
-    GetWorld()->SpawnActor<ANetworkManager>();
 }
 
 void AFindGameMenu::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
-
 }
 

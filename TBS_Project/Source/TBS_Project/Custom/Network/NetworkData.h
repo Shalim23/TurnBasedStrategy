@@ -1,8 +1,9 @@
 #pragma once
 
 //JSON messages keys
-static const char* CitadelsGameMessageJsonKey = "CitadelsGameMessage";
+static const char* TBSGameMessageJsonKey = "TBSGameMessage";
 static const char* MessageNameJsonKey = "MessageName";
+static const char* PlayersAmountJsonKey = "PlayersAmount";
 
 //messages from server
 static const char* WaitingForPlayersMessage = "WaitingForPlayers";

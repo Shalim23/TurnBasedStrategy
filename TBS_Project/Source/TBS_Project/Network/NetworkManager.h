@@ -24,7 +24,8 @@ protected:
 private:
     void OnReturnToMainMenu(const EventData& eventData);
     void OnPlayerReady(const EventData& eventData);
-    void Connect();
+    void OnFindGame(const EventData& eventData);
+    void Connect(int playersAmountToSearch);
 
     void Shutdown();
     void SubscribeOnEvents();

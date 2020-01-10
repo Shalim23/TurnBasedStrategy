@@ -58,7 +58,8 @@ void UMainMenuWidget::FindGame()
         RemoveFromParent();
         GetWorld()->SpawnActor<AFindGameMenu>();
 
-        findGameEvent->Broadcast(FindGameEventData());
+        //#TODO add user input and process it
+        findGameEvent->Broadcast(FindGameEventData(1)); 
         leaveFromMainMenuEvent->Broadcast(LeaveFromMainMenuEventData());
     }
 }
