@@ -26,7 +26,7 @@ void UFindGameWidget::NativeConstruct()
         DeactivateReadyButton();
     }
 
-    if (!m_IsConnected)
+    if (!m_IsConnected && !m_IsNoConnection)
     {
         SetMessageText("Finding game...");
     }
@@ -40,6 +40,12 @@ void UFindGameWidget::SetMessageText(const char* text)
     {
         MessageText->SetText(FText::FromString(text));
     }
+}
+
+void UFindGameWidget::OnNoConnection()
+{
+    m_IsNoConnection = true;
+    SetMessageText("Server is down...");
 }
 
 void UFindGameWidget::OnConnected()

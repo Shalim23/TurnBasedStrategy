@@ -14,7 +14,7 @@ class TBS_PROJECT_API UFindGameWidget : public UUserWidget
 public:
     UFindGameWidget(const FObjectInitializer& objectInitializer);
 
-    void SetMessageText(const char* text);
+    void OnNoConnection();
     void OnConnected();
     void OnGameFound();
     void OnWaitingForPlayers();
@@ -34,6 +34,7 @@ protected:
 private:
     void NativeConstruct() override;
     void DeactivateReadyButton();
+    void SetMessageText(const char* text);
 
 
     UFUNCTION()
@@ -44,5 +45,6 @@ private:
 
 private:
     bool m_IsConnected = false;
+    bool m_IsNoConnection = false;
 
 };

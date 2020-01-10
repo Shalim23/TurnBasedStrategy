@@ -32,7 +32,7 @@ void AFindGameMenu::OnNoServerConnection(const EventData& eventData)
     {
         if (UFindGameWidget* widget = static_cast<UFindGameWidget*>(m_widgetComponent->GetUserWidgetObject()))
         {
-            widget->SetMessageText("Server is down...");
+            widget->OnNoConnection(); 
         }
     }
     else if (eventData.eventType == GameplayEventType::ServerConnectionLost)
@@ -80,7 +80,7 @@ void AFindGameMenu::OnAllPlayersReady(const EventData& eventData)
     //#TODO implement further game flow!!!
     if (UFindGameWidget* widget = static_cast<UFindGameWidget*>(m_widgetComponent->GetUserWidgetObject()))
     {
-        widget->SetMessageText("All is ready!");
+        //widget->SetMessageText("All is ready!");
     }
 }
 
