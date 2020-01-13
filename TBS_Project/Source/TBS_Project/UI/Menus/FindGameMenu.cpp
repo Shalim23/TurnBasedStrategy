@@ -3,7 +3,6 @@
 #include "Components/WidgetComponent.h"
 #include "Custom/Events/EventDispatcher.h"
 #include "UI/Widgets/FindGameWidget.h"
-#include "Network/NetworkManager.h"
 
 AFindGameMenu::AFindGameMenu()
 {
