@@ -30,12 +30,12 @@ void ANetworkManager::OnReturnToMainMenu(const EventData& eventData)
         if (m_IsConnected)
         {
             TSharedPtr<FJsonObject> messageObject = MakeShareable(new FJsonObject);
-            messageObject->SetStringField(MessageNameJsonKey, ClientCancelMessage);
+            messageObject->SetStringField(MessageNameJsonKey, ClientCancelMessageName);
 
             m_NetworkSocketHandler.Send(messageObject);
         }
 
-        Shutdown();
+        Reset();
     }
 }
 
@@ -44,7 +44,7 @@ void ANetworkManager::OnPlayerReady(const EventData& eventData)
     if (eventData.eventType == GameplayEventType::ReadyForGame)
     {
         TSharedPtr<FJsonObject> messageObject = MakeShareable(new FJsonObject);
-        messageObject->SetStringField(MessageNameJsonKey, IsReadyMessage);
+        messageObject->SetStringField(MessageNameJsonKey, IsReadyMessageName);
 
         m_NetworkSocketHandler.Send(messageObject);
     }
@@ -66,7 +66,8 @@ void ANetworkManager::Connect(int playersAmountToSearch)
     if (m_NetworkSocketHandler.TryConnect())
     {
         TSharedPtr<FJsonObject> messageObject = MakeShareable(new FJsonObject);
-        messageObject->SetNumberField(PlayersAmountJsonKey, playersAmountToSearch);
+        messageObject->SetStringField(MessageNameJsonKey, ClientConnectionMessageName);
+        messageObject->SetNumberField(PlayersAmountJsonKey, 2);
         m_NetworkSocketHandler.Send(messageObject);
         
         m_IsConnected = true;
@@ -88,10 +89,11 @@ void ANetworkManager::Connect(int playersAmountToSearch)
     }
 }
 
-void ANetworkManager::Shutdown()
+void ANetworkManager::Reset()
 {
     SetActorTickEnabled(false);
-    m_NetworkSocketHandler.Shutdown();
+    m_NetworkSocketHandler.Reset();
+    m_IsConnected = false;
 }
 
 void ANetworkManager::SubscribeOnEvents()
@@ -116,7 +118,7 @@ void ANetworkManager::OnConnectionError()
         serverConnectionLostEvent->Broadcast(ServerConnectionLostEventData());
     }
 
-    Shutdown();
+    Reset();
 }
 
 void ANetworkManager::Tick(float DeltaTime)

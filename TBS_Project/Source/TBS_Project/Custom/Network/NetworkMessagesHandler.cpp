@@ -5,16 +5,16 @@
 
 void NetworkMessagesHandler::Init()
 {
-    m_NetEventsCallbacks.Add(WaitingForPlayersMessage,
+    m_NetEventsCallbacks.Add(WaitingForPlayersMessageName,
         [this](const TSharedPtr<FJsonObject>& jsonObject) { OnNetWaitingForPlayersMessage(jsonObject); });
 
-    m_NetEventsCallbacks.Add(AllAreReadyMessage,
+    m_NetEventsCallbacks.Add(AllAreReadyMessageName,
         [this](const TSharedPtr<FJsonObject>& jsonObject) { OnNetAllAreReadyMessage(jsonObject); });
 
-    m_NetEventsCallbacks.Add(WaitingForReadinessMessage,
+    m_NetEventsCallbacks.Add(WaitingForReadinessMessageName,
         [this](const TSharedPtr<FJsonObject>& jsonObject) { OnNetWaitingForReadinessMessage(jsonObject); });
 
-    m_NetEventsCallbacks.Add(NotReadyMessage,
+    m_NetEventsCallbacks.Add(NotReadyMessageName,
         [this](const TSharedPtr<FJsonObject>& jsonObject) { OnNetNotReadyMessage(jsonObject); });
 }
 

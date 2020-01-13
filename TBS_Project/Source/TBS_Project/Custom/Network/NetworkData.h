@@ -1,16 +1,17 @@
 #pragma once
 
 //JSON messages keys
-static const char* TBSGameMessageJsonKey = "TBSGameMessage";
-static const char* MessageNameJsonKey = "MessageName";
-static const char* PlayersAmountJsonKey = "PlayersAmount";
+static const char* TBSGameMessageJsonKey = "tbsGameMessage";
+static const char* MessageNameJsonKey = "messageName";
+static const char* PlayersAmountJsonKey = "playersAmount";
 
 //messages from server
-static const char* WaitingForPlayersMessage = "WaitingForPlayers";
-static const char* WaitingForReadinessMessage = "WaitingForReadiness";
-static const char* AllAreReadyMessage = "AllAreReady";
-static const char* NotReadyMessage = "NotReady";
+static const char* WaitingForPlayersMessageName = "WaitingForPlayers";
+static const char* WaitingForReadinessMessageName = "WaitingForReadiness";
+static const char* AllAreReadyMessageName = "AllAreReady";
+static const char* NotReadyMessageName = "NotReady";
 
 //messages from client
-static const char* IsReadyMessage = "IsReady";
-static const char* ClientCancelMessage = "ClientCancel";
+static const char* IsReadyMessageName = "IsReady";
+static const char* ClientCancelMessageName = "ClientCancel";
+static const char* ClientConnectionMessageName = "ClientConnection";

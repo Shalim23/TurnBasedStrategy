@@ -1,6 +1,7 @@
 #include "NetworkSocketHandler.h"
 #include "Networking.h"
 #include "Serialization/JsonSerializer.h"
+#include "Policies/CondensedJsonPrintPolicy.h"
 
 
 void NetworkSocketHandler::SetMessageFromServerCallback(std::function<void(const TSharedPtr<FJsonObject>&)> callback)
@@ -13,7 +14,7 @@ void NetworkSocketHandler::SetSendErrorCallback(std::function<void()> callback)
     m_SendErrorCallback = callback;
 }
 
-void NetworkSocketHandler::Shutdown()
+void NetworkSocketHandler::Reset()
 {
     if (m_Socket)
     {
@@ -51,6 +52,8 @@ void NetworkSocketHandler::Receive()
 
 bool NetworkSocketHandler::TryConnect()
 {
+    Reset();
+    
     m_Socket = FTcpSocketBuilder("default").AsNonBlocking();
 
     FIPv4Address ip(127, 0, 0, 1);
@@ -67,11 +70,10 @@ bool NetworkSocketHandler::TryConnect()
         return true;
     }
 
-    Shutdown();
+    Reset();
 
     return false;
 }
-
 
 void NetworkSocketHandler::Send(const TSharedPtr<FJsonObject>& jsonObject)
 {
@@ -79,7 +81,7 @@ void NetworkSocketHandler::Send(const TSharedPtr<FJsonObject>& jsonObject)
     rootObject->SetObjectField(TBSGameMessageJsonKey, jsonObject);
 
     FString jsonString;
-    TSharedRef<TJsonWriter<>> writer = TJsonWriterFactory<>::Create(&jsonString);
+    TSharedRef<TJsonWriter<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>> writer = TJsonWriterFactory<TCHAR, TCondensedJsonPrintPolicy<TCHAR>>::Create(&jsonString);
     FJsonSerializer::Serialize(rootObject.ToSharedRef(), writer);
     
     int32 sent = 0;

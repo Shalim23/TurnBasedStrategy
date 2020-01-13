@@ -1,5 +1,4 @@
 ﻿using System.Net.Sockets;
-using System.Collections.Generic;
 
 namespace TBS_GameServer.Source.Network
 {
@@ -23,27 +22,24 @@ namespace TBS_GameServer.Source.Network
     {
         public const string Ip = "127.0.0.1"; //#TODO use local for testing only
         public const int Port = 56000;
+        public const int DataSize = 1024;
+
         public const int MaxPlayers = 8;
         public const int MinPlayers = 2;
-        public const int DataSize = 1024;
+        public const int NewConnectedUserMessageTimeLimit = 5;
+
         public const int ReadinessTimeMs = 15000;
 
-
-        //JSON messages keys
-        public const string TBSGameMessageJsonKey = "TBSGameMessage";
-        public const string MessageNameJsonKey = "MessageName";
-        public const string PlayersAmountJsonKey = "PlayersAmount";
-
         //messages from server
-        public const string WaitingForPlayersMessage = "WaitingForPlayers";
-        public const string WaitingForReadinessMessage = "WaitingForReadiness";
-        public const string AllAreReadyMessage = "AllAreReady";
-        public const string NotReadyMessage = "NotReady";
-        public const string TerminatingMessage = "Terminating";
+        public const string WaitingForPlayersMessageName = "WaitingForPlayers";
+        public const string WaitingForReadinessMessageName = "WaitingForReadiness";
+        public const string AllAreReadyMessageName = "AllAreReady";
+        public const string NotReadyMessageName = "NotReady";
+        public const string TerminatingMessageName = "Terminating";
 
         //messages from client
-        public const string IsReadyMessage = "IsReady";
-        public const string ClientCancelMessage = "ClientCancel";
-        public const string ClientConnectionMessage = "ClientConnection";
+        public const string IsReadyMessageName = "IsReady";
+        public const string ClientCancelMessageName = "ClientCancel";
+        public const string ClientConnectionMessageName = "ClientConnection";
     }
 }

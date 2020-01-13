@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 using TBS_GameServer.Source.Utilities;
@@ -15,9 +14,10 @@ namespace TBS_GameServer.Source.Network
     { 
         public void SendConnectionError()
         {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.TerminatingMessage);
-            byte[] buffer = Utils.JsonMessagePacker(values);
+            Message message = new Message();
+            message.messageName = NetworkDataConsts.TerminatingMessageName;
+
+            byte[] buffer = Utils.JsonSerialize(message);
 
             foreach (KeyValuePair<string, ConnectedPlayerData> user in m_readyPlayers)
             {
@@ -28,12 +28,12 @@ namespace TBS_GameServer.Source.Network
             }
         }
 
-        void InvokeNetMessage(JsonElement message)
+        void InvokeNetMessage(string messageName, byte[] data)
         {
             NetworkMessageDelegate networkMessageDelegate;
             if (m_EventsManager.TryGetDelegate(DelegateType.NetworkMessage, out networkMessageDelegate))
             {
-                Task.Run(() => networkMessageDelegate.Invoke(message));
+                Task.Run(() => networkMessageDelegate.Invoke(messageName, data));
             }
             else
             {
@@ -53,10 +53,11 @@ namespace TBS_GameServer.Source.Network
                     int receivesBytes = user.Value.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
                     if (receivesBytes > 0)
                     {
-                        JsonElement message;
-                        if (Utils.TryGetValidMessageJsonObject(buffer, out message))
+                        Message message = new Message();
+                        if (Utils.TryJsonDeserialize(buffer, out message)
+                            && message.messageName != null)
                         {
-                            InvokeNetMessage(message);
+                            InvokeNetMessage(message.messageName, buffer);
                         }
                         else
                         {

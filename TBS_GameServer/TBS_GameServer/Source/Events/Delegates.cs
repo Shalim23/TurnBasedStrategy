@@ -1,5 +1,4 @@
-﻿using System.Text.Json;
-
+﻿
 namespace TBS_GameServer.Source.Events
 {
     class Delegates
@@ -10,7 +9,7 @@ namespace TBS_GameServer.Source.Events
             ConnectionError,
         }
 
-        public delegate void NetworkMessageDelegate(JsonElement data);
+        public delegate void NetworkMessageDelegate(string message, byte[] data);
         public delegate void ConnectionErrorDelegate();
     }
 }

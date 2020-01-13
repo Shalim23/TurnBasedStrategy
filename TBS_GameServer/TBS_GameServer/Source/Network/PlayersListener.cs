@@ -1,6 +1,7 @@
 ﻿using System.Net.Sockets;
 using System.Net;
 using System;
+using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -21,25 +22,22 @@ namespace TBS_GameServer.Source.Network
 
             m_PendingPlayers = new Dictionary<int, List<ConnectedPlayerData>>();
             m_PendingPlayersAfterConnectionError = new List<ConnectedPlayerData>();
+            m_NewConnectedUsers = new Dictionary<DateTime, Socket>();
 
             m_OnPlayersConnectedCallback = onPlayersConnectedCallback;
 
             m_IsActive = true;
 
             m_Listener.Start();
-            Console.WriteLine($"Started listening...");
+            Console.WriteLine("Started listening...");
         }
 
         public void Run()
         {
             while (m_IsActive)
             {
-                Socket handler = TryAcceptUserConnection();
-                if (handler != null)
-                {
-                    ProcessNewConnectedUser(handler);
-                }
-
+                CheckIncomingConnections();
+                CheckNewConnectedUserMessage();
                 CheckCancelFromPlayers();
                 CheckPendingUsersAfterConnectionError();
             }
@@ -55,8 +53,34 @@ namespace TBS_GameServer.Source.Network
             m_HasPendingUsersAfterConnectionError = true;
         }
 
+        void CheckIncomingConnections()
+        {
+            Socket handler = TryAcceptUserConnection();
+            if (handler != null)
+            {
+                m_NewConnectedUsers.Add(DateTime.Now, handler);
+            }
+        }
+
         void AddNewConnectedUser(int searchedPlayerAmount, Socket handler)
         {
+            //#TODO remove after debugging
+            if(searchedPlayerAmount == 1)
+            {
+                ConnectedPlayerData connectedPlayerData = new ConnectedPlayerData();
+                connectedPlayerData.state = ConnectedSocketState.WaitingForPlayers;
+                connectedPlayerData.socket = handler;
+                connectedPlayerData.searchedPlayersAmount = searchedPlayerAmount;
+
+                List<ConnectedPlayerData> temp = new List<ConnectedPlayerData>();
+                temp.Add(connectedPlayerData);
+                FinalizeConnection(temp);
+
+                Task.Run(() => m_OnPlayersConnectedCallback(temp));
+                return;
+            }
+            /////////////////////////////////////////////////////////////////////////
+
             List<ConnectedPlayerData> pendingPlayersForSearchedAmount;
             if(m_PendingPlayers.TryGetValue(searchedPlayerAmount, out pendingPlayersForSearchedAmount))
             {
@@ -88,36 +112,64 @@ namespace TBS_GameServer.Source.Network
                 connectedPlayerData.searchedPlayersAmount = searchedPlayerAmount;
              
                 newPendingPlayerForSearchedAmount.Add(connectedPlayerData);
-                Console.WriteLine($"{pendingPlayersForSearchedAmount.Count.ToString()} player(s) for {searchedPlayerAmount} players room");
+                Console.WriteLine($"{newPendingPlayerForSearchedAmount.Count.ToString()} player(s) for {searchedPlayerAmount} players room");
 
                 m_PendingPlayers.Add(searchedPlayerAmount, newPendingPlayerForSearchedAmount);
             }
         }
- 
-        void ProcessNewConnectedUser(Socket handler)
-        {
-            byte[] buffer = new byte[NetworkDataConsts.DataSize];
-            SocketError socketError;
 
-            if (handler.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError) > 0)
+        void CheckNewConnectedUserMessage()
+        {
+            TimeSpan timeLimit = TimeSpan.FromSeconds(NetworkDataConsts.NewConnectedUserMessageTimeLimit);
+            List<DateTime> usersToRemove = new List<DateTime>();
+
+            foreach(KeyValuePair<DateTime, Socket> newUser in m_NewConnectedUsers)
             {
-                int searchedPlayerAmount = 0;
-                if(TryParseNewConnectedUserMessage(buffer, out searchedPlayerAmount))
+                byte[] buffer = new byte[NetworkDataConsts.DataSize];
+                SocketError socketError;
+
+                if (newUser.Value.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError) > 0)
                 {
-                    AddNewConnectedUser(searchedPlayerAmount, handler);
+                    if(TryProcessNewConnectedUser(buffer, newUser.Value))
+                    {
+                        usersToRemove.Add(newUser.Key);
+                    }
+                }
+                else if(DateTime.Now - newUser.Key > timeLimit)
+                {
+                    Console.WriteLine("CheckNewConnectedUserMessage -> no data was sent on connection");
+                    usersToRemove.Add(newUser.Key);
                 }
             }
-            else
+
+            foreach(DateTime time in usersToRemove)
             {
-                Console.WriteLine("ProcessNewConnectedUser -> no data was sent on connection");
+                m_NewConnectedUsers.Remove(time);
             }
+        }
+
+        bool TryProcessNewConnectedUser(byte[] buffer, Socket socket)
+        {
+            ClientConnectionMessage clientConnectionMessage = new ClientConnectionMessage();
+            
+            if(Utils.TryJsonDeserialize(buffer, out clientConnectionMessage) 
+                && clientConnectionMessage.messageName == NetworkDataConsts.ClientConnectionMessageName
+                && clientConnectionMessage.playersAmount != null)
+            {
+                AddNewConnectedUser((int)clientConnectionMessage.playersAmount, socket);
+                return true;
+            }
+
+            Console.WriteLine($"TryProcessNewConnectedUser -> invalid data\n{Encoding.UTF8.GetString(buffer, 0, buffer.Length).TrimEnd('\0')}");
+            return false;
         }
         
         private void FinalizeConnection(List<ConnectedPlayerData> connectedUsers)
         {
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.WaitingForReadinessMessage);
-            byte[] buffer = Utils.JsonMessagePacker(values);
+            Message message = new Message();
+            message.messageName = NetworkDataConsts.WaitingForReadinessMessageName;
+            
+            byte[] buffer = Utils.JsonSerialize(message);
             
             foreach (ConnectedPlayerData user in connectedUsers)
             {
@@ -158,7 +210,10 @@ namespace TBS_GameServer.Source.Network
                     int receivesBytes = player.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
                     if (receivesBytes > 0)
                     {
-                        if (TryParseCancelMessage(buffer))
+                        Message message = new Message();
+                        
+                        if (Utils.TryJsonDeserialize(buffer, out message) 
+                            && message.messageName == NetworkDataConsts.ClientCancelMessageName)
                         {
                             Console.WriteLine("CheckCancelFromPlayers -> cancel from player");
                             QueueUserToRemove(player, ConnectedSocketState.Canceled);
@@ -215,6 +270,8 @@ namespace TBS_GameServer.Source.Network
         bool m_HasPendingUsersAfterConnectionError = false;
 
         TcpListener m_Listener = null;
+
+        Dictionary<DateTime, Socket> m_NewConnectedUsers = null;
         Dictionary<int, List<ConnectedPlayerData>> m_PendingPlayers = null;
         List<ConnectedPlayerData> m_PendingPlayersAfterConnectionError = null;
 

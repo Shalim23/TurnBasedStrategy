@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.Json;
 using TBS_GameServer.Source.Events;
 
 using static TBS_GameServer.Source.Events.Delegates;
@@ -16,7 +15,7 @@ namespace TBS_GameServer.Source.Network
 
             //#TODO init callbacks for gameplay events
         }
-        void ProcessMessage(JsonElement message)
+        void ProcessMessage(string message, byte[] data)
         {
             //#TODO deserialize and process;
         }

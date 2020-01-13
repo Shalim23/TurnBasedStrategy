@@ -11,7 +11,7 @@ class NetworkSocketHandler
 public:
     void SetMessageFromServerCallback(std::function<void(const TSharedPtr<FJsonObject>&)> callback);
     void SetSendErrorCallback(std::function<void()> callback);
-    void Shutdown();
+    void Reset();
 
     bool TryConnect();
 

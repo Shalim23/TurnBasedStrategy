@@ -71,16 +71,17 @@ namespace TBS_GameServer.Source.Network
                 int receivesBytes = user.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
                 if (receivesBytes > 0)
                 {
-                    string message;
-                    if(TryProcessReadyMessage(buffer, out message))
+                    Message message = new Message();
+                    
+                    if(Utils.TryJsonDeserialize(buffer, out message))
                     {
-                        if (message == NetworkDataConsts.IsReadyMessage && user.state != ConnectedSocketState.Ready)
+                        if (message.messageName == NetworkDataConsts.IsReadyMessageName && user.state != ConnectedSocketState.Ready)
                         {
                             user.state = ConnectedSocketState.Ready;
                             ++m_ReadyPlayersCount;
                             Console.WriteLine($"{m_ReadyPlayersCount.ToString()} ready");
                         }
-                        else if (message == NetworkDataConsts.ClientCancelMessage)
+                        else if (message.messageName == NetworkDataConsts.ClientCancelMessageName)
                         {
                             Console.WriteLine("ProcessMessagesFromPlayers -> cancel from player");
                             QueueUserToRemove(user, ConnectedSocketState.Canceled);
@@ -112,9 +113,10 @@ namespace TBS_GameServer.Source.Network
         {
             Console.WriteLine("OnReadinessTimeElapsed -> not all accepted");
 
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.NotReadyMessage);
-            byte[] buffer = Utils.JsonMessagePacker(values);
+            Message message = new Message();
+            message.messageName = NetworkDataConsts.NotReadyMessageName;
+            
+            byte[] buffer = Utils.JsonSerialize(message);
 
             foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {
@@ -137,9 +139,10 @@ namespace TBS_GameServer.Source.Network
         {
             DeactivateReadinessTimer();
 
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.WaitingForPlayersMessage);
-            byte[] buffer = Utils.JsonMessagePacker(values);
+            Message message = new Message();
+            message.messageName = NetworkDataConsts.WaitingForPlayersMessageName;
+
+            byte[] buffer = Utils.JsonSerialize(message);
 
             foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {
@@ -170,9 +173,10 @@ namespace TBS_GameServer.Source.Network
             Console.WriteLine("CheckPlayersReadiness -> checking...");
             DeactivateReadinessTimer();
 
-            Dictionary<string, object> values = new Dictionary<string, object>();
-            values.Add(NetworkDataConsts.MessageNameJsonKey, NetworkDataConsts.AllAreReadyMessage);
-            byte[] buffer = Utils.JsonMessagePacker(values);
+            Message message = new Message();
+            message.messageName = NetworkDataConsts.AllAreReadyMessageName;
+
+            byte[] buffer = Utils.JsonSerialize(message);
 
             foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
             {

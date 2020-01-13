@@ -27,7 +27,7 @@ private:
     void OnFindGame(const EventData& eventData);
     void Connect(int playersAmountToSearch);
 
-    void Shutdown();
+    void Reset();
     void SubscribeOnEvents();
     void ProcessMessage(const TSharedPtr<FJsonObject>& jsonObject);
     void OnConnectionError();

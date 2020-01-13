@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Text;
-using System.IO;
-using TBS_GameServer.Source.Network;
 
 namespace TBS_GameServer.Source.Utilities
 {
@@ -27,78 +25,34 @@ namespace TBS_GameServer.Source.Utilities
             return toReturn;
         }
 
-        static public bool TryParseJson(byte[] data, out JsonDocument jsonDocument)
+        static public byte[] JsonSerialize<T>(T messageBody)
         {
+            var message = new JsonNetMessage<T>();
+            message.tbsGameMessage = messageBody;
+
+            return Encoding.ASCII.GetBytes(JsonSerializer.Serialize(message));
+        }
+
+        static public bool TryJsonDeserialize<T>(byte[] buffer, out T message)
+        {
+            bool isSuccess = false;
+            var jsonMessage = new JsonNetMessage<T>();
+            jsonMessage.tbsGameMessage = Activator.CreateInstance<T>();
+
             try
             {
-                jsonDocument = JsonDocument.Parse(Encoding.UTF8.GetString(data).TrimEnd('\0'));
+                string jsonDoc = Encoding.UTF8.GetString(buffer, 0, buffer.Length).TrimEnd('\0');
+                Console.WriteLine($"Deserialize -> {jsonDoc}");
+                jsonMessage = JsonSerializer.Deserialize<JsonNetMessage<T>>(Encoding.UTF8.GetString(buffer, 0, buffer.Length).TrimEnd('\0'));
+                isSuccess = true;
             }
             catch(JsonException)
             {
-                jsonDocument = null;
-                return false;
+                Console.WriteLine($"{typeof(T)} -> Deserialize -> invalid doc");
             }
 
-            return true;
-        }
-
-        static public bool TryGetValidMessageJsonObject(byte[] data, out JsonElement element)
-        {
-            JsonDocument doc;
-            if (TryParseJson(data, out doc))
-            {
-                if (doc.RootElement.TryGetProperty(NetworkDataConsts.TBSGameMessageJsonKey, out element))
-                {
-                    return true;
-                }
-            }
-
-            element = new JsonElement(); //cannot be null
-            return false;
-        }
-
-        static public byte[] JsonMessagePacker(Dictionary<string, object> values)
-        {
-            MemoryStream memoryStream = new MemoryStream();
-            Utf8JsonWriter utf8JsonWriter = new Utf8JsonWriter(memoryStream);
-
-            utf8JsonWriter.WriteStartObject();
-
-            utf8JsonWriter.WriteStartObject(NetworkDataConsts.TBSGameMessageJsonKey);
-
-            foreach (KeyValuePair<string, object> value in values)
-            {
-                utf8JsonWriter.WritePropertyName(value.Key);
-
-                Type valueType = value.Value.GetType();
-                if(valueType == typeof(int))
-                {
-                    utf8JsonWriter.WriteNumberValue(Convert.ToInt32(value.Value));
-                }
-                else if(valueType == typeof(string))
-                {
-                    utf8JsonWriter.WriteStringValue(Convert.ToString(value.Value));
-                }
-                else if(valueType == typeof(bool))
-                {
-                    utf8JsonWriter.WriteBooleanValue(Convert.ToBoolean(value.Value));
-                }
-                else
-                {
-                    utf8JsonWriter.WriteNullValue();
-                    Console.WriteLine($"JsonMessagePacker -> unsuported type {value.Key} - {value.Value}");
-                }
-            }
-
-            utf8JsonWriter.WriteEndObject();
-
-            utf8JsonWriter.WriteEndObject();
-            utf8JsonWriter.Flush();
-
-            memoryStream.Position = 0;
-            StreamReader reader = new StreamReader(memoryStream);
-
-            return Encoding.ASCII.GetBytes(reader.ReadToEnd());
+            message = jsonMessage.tbsGameMessage;
+            return isSuccess;
         }
 
         static public string GetNextRoomId(string currentId)
