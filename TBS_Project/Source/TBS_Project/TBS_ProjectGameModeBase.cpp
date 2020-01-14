@@ -6,6 +6,7 @@
 ATBS_ProjectGameModeBase::ATBS_ProjectGameModeBase()
 {
     DefaultPawnClass = nullptr;
+    SpectatorClass = nullptr;
 }
 
 void ATBS_ProjectGameModeBase::BeginPlay()
@@ -15,10 +16,14 @@ void ATBS_ProjectGameModeBase::BeginPlay()
     APlayerController* controller = GetWorld()->GetFirstPlayerController();
     if (controller)
     {
-        //controller->SetInputMode(FInputModeUIOnly());
-        //controller->bShowMouseCursor = true;
+        FInputModeGameAndUI inputMode;
+        inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
+        controller->SetInputMode(inputMode);
+        
+        controller->bShowMouseCursor = true;
     }
 
     GetWorld()->SpawnActor<ACameraHandler>();
     //GetWorld()->SpawnActor<ANetworkManager>();
+    //GetWorld()->SpawnActor<AMainMenu>();
 }

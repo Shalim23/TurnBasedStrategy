@@ -5,6 +5,7 @@ TBS_Project/TBS_Project.sln
 TBS_Project/.vs/
 TBS_Project.index
 *.log
+*.index
 
 TBS_GameServer/.vs/
 TBS_GameServer/TBS_GameServer/bin/
