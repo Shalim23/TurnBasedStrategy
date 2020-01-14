@@ -4,6 +4,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Custom/Utils/PrintScreenHelper.h"
 
+
+//#TODO remove debug operations
 ALevelTile::ALevelTile()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -22,7 +24,7 @@ ALevelTile::ALevelTile()
 		m_ColorMaterial = UMaterialInstanceDynamic::Create(MaterialAsset.Object, m_Mesh);
 	}
 
-	m_Mesh->SetWorldLocation(FVector(0.0f, 0.0f, 10.0f), false, 0, ETeleportType::None);
+	m_Mesh->SetWorldLocation(FVector(100.0f, 100.0f, 10.0f), false, 0, ETeleportType::None);
 	m_Mesh->SetMaterial(0, m_ColorMaterial);
 
 	m_Mesh->OnClicked.AddDynamic(this, &ALevelTile::ChangeColor);
