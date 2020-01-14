@@ -2,6 +2,7 @@
 #include "UI/Menus/MainMenu.h"
 #include "Network/NetworkManager.h"
 #include "Game/CameraHandler.h"
+#include "Game/LevelTile.h"
 
 ATBS_ProjectGameModeBase::ATBS_ProjectGameModeBase()
 {
@@ -21,9 +22,12 @@ void ATBS_ProjectGameModeBase::BeginPlay()
         controller->SetInputMode(inputMode);
         
         controller->bShowMouseCursor = true;
+        controller->bEnableMouseOverEvents = true;
+        controller->bEnableClickEvents = true;
     }
 
     GetWorld()->SpawnActor<ACameraHandler>();
+    GetWorld()->SpawnActor<ALevelTile>();
     //GetWorld()->SpawnActor<ANetworkManager>();
     //GetWorld()->SpawnActor<AMainMenu>();
 }
