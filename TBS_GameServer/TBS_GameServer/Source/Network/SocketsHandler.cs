@@ -11,7 +11,21 @@ using static TBS_GameServer.Source.Events.Delegates;
 namespace TBS_GameServer.Source.Network
 {
     class SocketsHandler
-    { 
+    {
+        public SocketsHandler(EventsManagerInstance eventsManager,
+            List<ConnectedPlayerData> readyPlayers)
+        {
+            m_EventsManager = eventsManager;
+
+            m_readyPlayers = new Dictionary<string, ConnectedPlayerData>();
+            for (int index = 0; index < readyPlayers.Count; ++index)
+            {
+                m_readyPlayers.Add(JsonDataLoader.LoadedIds.Ids[index], readyPlayers[index]);
+            }
+
+            m_IsActive = true;
+        }
+
         public void SendConnectionError()
         {
             Message message = new Message();
@@ -53,9 +67,8 @@ namespace TBS_GameServer.Source.Network
                     int receivesBytes = user.Value.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
                     if (receivesBytes > 0)
                     {
-                        Message message = new Message();
-                        if (Utils.TryJsonDeserialize(buffer, out message)
-                            && message.messageName != null)
+                        Message message = Utils.JsonDeserialize<Message>(buffer);
+                        if (message.IsValid())
                         {
                             InvokeNetMessage(message.messageName, buffer);
                         }
@@ -74,19 +87,6 @@ namespace TBS_GameServer.Source.Network
                     }
                 }
             }
-        }
-
-        public void Init(EventsManagerInstance eventsManager, List<ConnectedPlayerData> readyPlayers)
-        {
-            m_EventsManager = eventsManager;
-
-            m_readyPlayers = new Dictionary<string, ConnectedPlayerData>();
-            for (int index = 0; index < readyPlayers.Count; ++index)
-            {
-                m_readyPlayers.Add(LoadableData.Ids[index], readyPlayers[index]);
-            }
-
-            m_IsActive = true;
         }
 
         void ProcessConnectionError(ConnectedPlayerData user)

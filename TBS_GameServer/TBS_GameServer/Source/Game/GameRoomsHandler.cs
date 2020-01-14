@@ -10,12 +10,16 @@ namespace TBS_GameServer.Source.Game
 {
     class GameRoomsHandler
     {
+        public GameRoomsHandler()
+        {
+            m_GameRoomsById = new Dictionary<string, GameRoom>();
+        }
         public void CreateRoom(List<ConnectedPlayerData> connectedPlayers)
         {
             m_NextRoomId = Utils.GetNextRoomId(m_NextRoomId);
 
-            GameRoom newRoom = new GameRoom();
-            newRoom.Init(m_NextRoomId, connectedPlayers, roomId => OnRoomShutdown(roomId));
+            GameRoom newRoom = new GameRoom(m_NextRoomId, connectedPlayers,
+                roomId => OnRoomShutdown(roomId));
 
             lock (GameRoomsLock)
             {
@@ -43,7 +47,7 @@ namespace TBS_GameServer.Source.Game
         }
 
         string m_NextRoomId = null;
-        Dictionary<string, GameRoom> m_GameRoomsById = new Dictionary<string, GameRoom>();
+        Dictionary<string, GameRoom> m_GameRoomsById = null;
 
         static readonly object GameRoomsLock = new object();
     }

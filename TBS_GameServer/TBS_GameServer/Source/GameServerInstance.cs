@@ -9,13 +9,11 @@ namespace TBS_GameServer.Source
 {
     class GameServerInstance
     {
-        public void Init()
+        public GameServerInstance()
         {
             JsonDataLoader.LoadJsonData();
 
-            m_PlayersListener = new PlayersListener();
-            m_PlayersListener.Init(connectedPlayers => OnPlayersConnected(connectedPlayers));
-            
+            m_PlayersListener = new PlayersListener(connectedPlayers => OnPlayersConnected(connectedPlayers));
             m_RoomsHandler = new GameRoomsHandler();
         }
 
@@ -29,8 +27,7 @@ namespace TBS_GameServer.Source
 
         void OnPlayersConnected(List<ConnectedPlayerData> connectedPlayers)
         {
-            PlayersReadinessHandler readinessHandler = new PlayersReadinessHandler();
-            readinessHandler.Init(connectedPlayers,
+            PlayersReadinessHandler readinessHandler = new PlayersReadinessHandler(connectedPlayers,
                 players => OnPlayersReady(players), players => OnRestartConnection(players));
 
             Task.Run(() => readinessHandler.Run());

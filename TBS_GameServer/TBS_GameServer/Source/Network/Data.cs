@@ -13,6 +13,14 @@ namespace TBS_GameServer.Source.Network
 
     public class ConnectedPlayerData
     {
+        public ConnectedPlayerData(Socket _socket, ConnectedSocketState _state,
+            int _searchedPlayersAmount)
+        {
+            socket = _socket;
+            state = _state;
+            searchedPlayersAmount = _searchedPlayersAmount;
+        }
+    
         public Socket socket;
         public ConnectedSocketState state;
         public int searchedPlayersAmount;
@@ -28,7 +36,7 @@ namespace TBS_GameServer.Source.Network
         public const int MinPlayers = 2;
         public const int NewConnectedUserMessageTimeLimit = 5;
 
-        public const int ReadinessTimeMs = 15000;
+        public const int ReadyTimeLimitSec = 15;
 
         //messages from server
         public const string WaitingForPlayersMessageName = "WaitingForPlayers";

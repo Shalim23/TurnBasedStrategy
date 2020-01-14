@@ -14,7 +14,8 @@ namespace TBS_GameServer.Source.Network
 
     class PlayersReadinessHandler
     {
-        public void Init(List<ConnectedPlayerData> connectedPlayers, OnPlayersReady onPlayersReadyCallback, OnRestartConnection onRestartConnectionCallback)
+        public PlayersReadinessHandler(List<ConnectedPlayerData> connectedPlayers,
+            OnPlayersReady onPlayersReadyCallback, OnRestartConnection onRestartConnectionCallback)
         {
             m_ConnectedPlayersInProcess = connectedPlayers;
             m_ConnectedPlayersCount = m_ConnectedPlayersInProcess.Count;
@@ -22,15 +23,15 @@ namespace TBS_GameServer.Source.Network
             m_OnPlayersReadyCallback = onPlayersReadyCallback;
             m_OnRestartConnectionCallback = onRestartConnectionCallback;
         }
+
         public void Run()
         {
             Console.WriteLine("Waiting for players' readiness");
 
-            m_ReadinessTimer = new Timer(NetworkDataConsts.ReadinessTimeMs);
-            m_ReadinessTimer.Elapsed += delegate { m_IsTimerElapsed = true; };
-            m_ReadinessTimer.Enabled = true;
+            TimeSpan timeLimit = TimeSpan.FromSeconds(NetworkDataConsts.ReadyTimeLimitSec);
+            DateTime beginTimeStamp = DateTime.Now;
 
-            while (!m_IsTimerElapsed)
+            while (DateTime.Now - beginTimeStamp < timeLimit)
             {
                 ProcessMessagesFromPlayers();
 
@@ -55,12 +56,6 @@ namespace TBS_GameServer.Source.Network
             RestartPlayersConnection();
         }
 
-        void DeactivateReadinessTimer()
-        {
-            m_ReadinessTimer.Enabled = false;
-            m_ReadinessTimer = null;
-        }
-
         void ProcessMessagesFromPlayers()
         {
             foreach (ConnectedPlayerData user in m_ConnectedPlayersInProcess)
@@ -71,9 +66,9 @@ namespace TBS_GameServer.Source.Network
                 int receivesBytes = user.socket.Receive(buffer, 0, NetworkDataConsts.DataSize, SocketFlags.None, out socketError);
                 if (receivesBytes > 0)
                 {
-                    Message message = new Message();
+                    Message message = Utils.JsonDeserialize<Message>(buffer);
                     
-                    if(Utils.TryJsonDeserialize(buffer, out message))
+                    if(message.IsValid())
                     {
                         if (message.messageName == NetworkDataConsts.IsReadyMessageName && user.state != ConnectedSocketState.Ready)
                         {
@@ -137,8 +132,6 @@ namespace TBS_GameServer.Source.Network
 
         void RestartPlayersConnection()
         {
-            DeactivateReadinessTimer();
-
             Message message = new Message();
             message.messageName = NetworkDataConsts.WaitingForPlayersMessageName;
 
@@ -171,7 +164,6 @@ namespace TBS_GameServer.Source.Network
             }
 
             Console.WriteLine("CheckPlayersReadiness -> checking...");
-            DeactivateReadinessTimer();
 
             Message message = new Message();
             message.messageName = NetworkDataConsts.AllAreReadyMessageName;
@@ -194,11 +186,9 @@ namespace TBS_GameServer.Source.Network
             m_ReadyPlayersCount = m_ConnectedPlayersInProcess.Count;
         }
 
-        bool m_IsTimerElapsed = false;
         int m_ReadyPlayersCount = 0;
         int m_ConnectedPlayersCount = 0;
 
-        Timer m_ReadinessTimer = null;
         List<ConnectedPlayerData> m_ConnectedPlayersInProcess = null;
 
         OnPlayersReady m_OnPlayersReadyCallback = null;

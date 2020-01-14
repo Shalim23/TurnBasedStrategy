@@ -8,17 +8,16 @@ namespace TBS_GameServer.Source.Game
 {
     class GameManagerInstance
     {
-        void SubscribeOnEvents()
-        {
-            //m_EventsManager.Subscribe<PlayersConnectedDelegate>(DelegateType.PlayersConnected, OnPlayersConnected);
-        }
-
-        public void Init(EventsManagerInstance eventsManager, int playersAmount)
+        public GameManagerInstance(EventsManagerInstance eventsManager, int playersAmount)
         {
             m_EventsManager = eventsManager;
             SubscribeOnEvents();
 
             InitGameData(playersAmount);
+        }
+        void SubscribeOnEvents()
+        {
+            //m_EventsManager.Subscribe<PlayersConnectedDelegate>(DelegateType.PlayersConnected, OnPlayersConnected);
         }
 
         void InitGameData(int playersAmount)

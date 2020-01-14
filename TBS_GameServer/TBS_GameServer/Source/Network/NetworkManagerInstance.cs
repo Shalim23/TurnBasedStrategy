@@ -8,21 +8,18 @@ namespace TBS_GameServer.Source.Network
 {
     class NetworkManagerInstance
     {
-        void SubscribeOnEvents()
-        {
-            m_EventsManager.Subscribe<ConnectionErrorDelegate>(DelegateType.ConnectionError, OnConnectionError);
-        }
-
-        public void Init(EventsManagerInstance eventsManager, List<ConnectedPlayerData> connectedPlayers)
+        public NetworkManagerInstance(EventsManagerInstance eventsManager,
+            List<ConnectedPlayerData> connectedPlayers)
         {
             m_EventsManager = eventsManager;
             SubscribeOnEvents();
 
-            m_MessageHandler = new MessageHandler();
-            m_MessageHandler.Init(m_EventsManager);
-
-            m_SocketsHandler = new SocketsHandler();
-            m_SocketsHandler.Init(m_EventsManager, connectedPlayers);
+            m_MessageHandler = new MessageHandler(m_EventsManager);
+            m_SocketsHandler = new SocketsHandler(m_EventsManager, connectedPlayers);
+        }
+        void SubscribeOnEvents()
+        {
+            m_EventsManager.Subscribe<ConnectionErrorDelegate>(DelegateType.ConnectionError, OnConnectionError);
         }
 
         public void StartMessageProcessing()

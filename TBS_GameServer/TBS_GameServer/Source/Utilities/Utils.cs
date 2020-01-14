@@ -33,9 +33,8 @@ namespace TBS_GameServer.Source.Utilities
             return Encoding.ASCII.GetBytes(JsonSerializer.Serialize(message));
         }
 
-        static public bool TryJsonDeserialize<T>(byte[] buffer, out T message)
+        static public T JsonDeserialize<T>(byte[] buffer)
         {
-            bool isSuccess = false;
             var jsonMessage = new JsonNetMessage<T>();
             jsonMessage.tbsGameMessage = Activator.CreateInstance<T>();
 
@@ -44,15 +43,14 @@ namespace TBS_GameServer.Source.Utilities
                 string jsonDoc = Encoding.UTF8.GetString(buffer, 0, buffer.Length).TrimEnd('\0');
                 Console.WriteLine($"Deserialize -> {jsonDoc}");
                 jsonMessage = JsonSerializer.Deserialize<JsonNetMessage<T>>(Encoding.UTF8.GetString(buffer, 0, buffer.Length).TrimEnd('\0'));
-                isSuccess = true;
+
             }
             catch(JsonException)
             {
                 Console.WriteLine($"{typeof(T)} -> Deserialize -> invalid doc");
             }
 
-            message = jsonMessage.tbsGameMessage;
-            return isSuccess;
+            return jsonMessage.tbsGameMessage;
         }
 
         static public string GetNextRoomId(string currentId)

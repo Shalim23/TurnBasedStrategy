@@ -9,7 +9,8 @@ namespace TBS_GameServer.Source.Game
     {
         public delegate void OnRoomShutdown(string RoomId);
 
-        public void Init(string roomId, List<ConnectedPlayerData> connectedPlayers, OnRoomShutdown onRoomShutdownCallback)
+        public GameRoom(string roomId, List<ConnectedPlayerData> connectedPlayers,
+            OnRoomShutdown onRoomShutdownCallback)
         {
             m_RoomId = roomId;
             m_OnRoomShutdownCallback = onRoomShutdownCallback;
@@ -17,11 +18,8 @@ namespace TBS_GameServer.Source.Game
             m_EventsManager = new EventsManagerInstance();
             m_EventsManager.Init();
 
-            m_GameInstance = new GameManagerInstance();
-            m_GameInstance.Init(m_EventsManager, connectedPlayers.Count);
-
-            m_NetworkManager = new NetworkManagerInstance();
-            m_NetworkManager.Init(m_EventsManager, connectedPlayers);
+            m_GameInstance = new GameManagerInstance(m_EventsManager, connectedPlayers.Count);
+            m_NetworkManager = new NetworkManagerInstance(m_EventsManager, connectedPlayers);
         }
 
         public void Run()

@@ -5,11 +5,6 @@ using System.Text.Json;
 
 namespace TBS_GameServer.Source.Utilities
 {
-    static class LoadableData
-    {
-        public static List<string> Ids;
-    }
-
     static class JsonDataLoader
     {
         public static void LoadJsonData()
@@ -20,22 +15,24 @@ namespace TBS_GameServer.Source.Utilities
 
         static void LoadIds()
         {
-            List<string> ids = new List<string>();
             string path = Environment.CurrentDirectory + @"\JsonData\IdNames.json";
             string text = File.ReadAllText(path);
 
-            JsonDocument doc = JsonDocument.Parse(text);
-            JsonElement idsObject = doc.RootElement.GetProperty("Ids");
-            foreach (JsonElement id in idsObject.EnumerateArray())
-            {
-                if (id.ValueKind == JsonValueKind.String)
-                {
-                    ids.Add(id.GetString());
-                }
-            }
-
-            LoadableData.Ids = ids;
+            LoadedIds = new JsonLoadableDataIds();
+            LoadedIds = JsonSerializer.Deserialize<JsonLoadableDataIds>(text);
             Console.WriteLine("Ids loaded...");
         }
+
+        public static JsonLoadableDataIds LoadedIds = null;
+    }
+
+    class JsonLoadableDataIds
+    {
+        public JsonLoadableDataIds()
+        {
+            Ids = new List<string>();
+        }
+
+        public List<string> Ids { get; set; }
     }
 }

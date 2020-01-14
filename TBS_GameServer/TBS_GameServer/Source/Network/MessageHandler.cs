@@ -8,16 +8,26 @@ namespace TBS_GameServer.Source.Network
 {
     class MessageHandler
     {
-        public void Init(EventsManagerInstance eventsManager)
+        public MessageHandler(EventsManagerInstance eventsManager)
         {
             m_EventsManager = eventsManager;
             SubscribeOnEvents();
 
+            m_NetEventsCallbacks = new Dictionary<string, Func<string>>();
+
             //#TODO init callbacks for gameplay events
         }
+
         void ProcessMessage(string message, byte[] data)
         {
-            //#TODO deserialize and process;
+            if(m_NetEventsCallbacks.ContainsKey(message))
+            {
+                //#TODO deserialize and process;
+            }
+            else
+            {
+                Console.WriteLine($"{message} -> not present in MessageHandler");
+            }
         }
 
         void SubscribeOnEvents()
@@ -26,6 +36,6 @@ namespace TBS_GameServer.Source.Network
         }
 
         EventsManagerInstance m_EventsManager = null;
-        Dictionary<string, Func<string>> m_NetEventsCallbacks;
+        Dictionary<string, Func<string>> m_NetEventsCallbacks = null;
     }
 }
