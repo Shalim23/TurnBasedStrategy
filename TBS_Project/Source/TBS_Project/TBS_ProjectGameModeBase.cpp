@@ -2,7 +2,8 @@
 #include "UI/Menus/MainMenu.h"
 #include "Network/NetworkManager.h"
 #include "Game/CameraHandler.h"
-#include "Game/LevelTile.h"
+#include "Game/InputHandler.h"
+#include "Game/Tutorial/TutorialLevelHandler.h"
 
 ATBS_ProjectGameModeBase::ATBS_ProjectGameModeBase()
 {
@@ -14,20 +15,25 @@ void ATBS_ProjectGameModeBase::BeginPlay()
 {
     Super::BeginPlay();
 
-    APlayerController* controller = GetWorld()->GetFirstPlayerController();
-    if (controller)
+    if (UWorld* world = GetWorld())
     {
-        FInputModeGameAndUI inputMode;
-        inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
-        controller->SetInputMode(inputMode);
-        
-        controller->bShowMouseCursor = true;
-        controller->bEnableMouseOverEvents = true;
-        controller->bEnableClickEvents = true;
-    }
+        if (APlayerController* controller = world->GetFirstPlayerController())
+        {
+            FInputModeGameAndUI inputMode;
+            inputMode.SetLockMouseToViewportBehavior(EMouseLockMode::LockAlways);
 
-    GetWorld()->SpawnActor<ACameraHandler>();
-    GetWorld()->SpawnActor<ALevelTile>();
-    //GetWorld()->SpawnActor<ANetworkManager>();
-    //GetWorld()->SpawnActor<AMainMenu>();
+            controller->SetInputMode(inputMode);
+            controller->bShowMouseCursor = true;
+            controller->bEnableMouseOverEvents = true;
+            controller->bEnableClickEvents = true;
+
+            controller->Possess(world->SpawnActor<AInputHandler>());
+
+            world->SpawnActor<ATutorialLevelHandler>();
+
+            world->SpawnActor<ACameraHandler>();
+            //world->SpawnActor<ANetworkManager>();
+            //world->SpawnActor<AMainMenu>();
+        }
+    }
 }

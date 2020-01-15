@@ -2,6 +2,8 @@
 #include "Camera/CameraComponent.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Components/WidgetComponent.h"
+#include "Custom/Events/Events.h"
+#include "Custom/Utils/PrintScreenHelper.h"
 
 
 //#TODO add zoom in/out
@@ -18,7 +20,11 @@ ACameraHandler::ACameraHandler()
     }
 
     SetCameraLocation(FVector(0.0f, 0.0f, 300.0f));
-    m_Camera->SetWorldRotation(FQuat(FRotator(-90.0f, 0.0f, 0.0f)), false, 0, ETeleportType::None);
+    m_Camera->SetWorldRotation(FQuat(FRotator(-90.0f, 0.0f, -90.0f)), false, 0, ETeleportType::None);
+
+    RootComponent = m_Camera;
+
+    SubscribeOnEvents();
 }
 
 void ACameraHandler::BeginPlay()
@@ -37,6 +43,13 @@ void ACameraHandler::BeginPlay()
     }
 }
 
+void ACameraHandler::EndPlay(const EEndPlayReason::Type reason)
+{
+    Super::EndPlay(reason);
+
+    m_EventsHandler.unsubscribe();
+}
+
 void ACameraHandler::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
@@ -48,44 +61,44 @@ void ACameraHandler::ProcessCameraState()
     const float OffsetToAdd = 3.0f;
     switch (m_CameraState)
     {
-        case CameraMoveState::Top:
+        case CameraMoveState::Right:
         {
             SetCameraLocation(m_Camera->GetComponentLocation() + FVector(OffsetToAdd, 0.0f, 0.0f));
             break;
         }
-        case CameraMoveState::Bottom:
+        case CameraMoveState::Left:
         {
             SetCameraLocation(m_Camera->GetComponentLocation() + FVector(-OffsetToAdd, 0.0f, 0.0f));
             break;
         }
-        case CameraMoveState::Left:
+        case CameraMoveState::Top:
         {
             SetCameraLocation(m_Camera->GetComponentLocation() + FVector(0.0f, -OffsetToAdd, 0.0f));
             break;
         }
-        case CameraMoveState::Right:
+        case CameraMoveState::Bottom:
         {
             SetCameraLocation(m_Camera->GetComponentLocation() + FVector(0.0f, OffsetToAdd, 0.0f));
             break;
         }
         case CameraMoveState::TopLeft:
         {
-            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(OffsetToAdd, -OffsetToAdd, 0.0f));
+            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(-OffsetToAdd, -OffsetToAdd, 0.0f));
             break;
         }
         case CameraMoveState::TopRight:
         {
-            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(OffsetToAdd, OffsetToAdd, 0.0f));
+            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(OffsetToAdd, -OffsetToAdd, 0.0f));
             break;
         }
         case CameraMoveState::BottomLeft:
         {
-            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(-OffsetToAdd, -OffsetToAdd, 0.0f));
+            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(-OffsetToAdd, OffsetToAdd, 0.0f));
             break;
         }
         case CameraMoveState::BottomRight:
         {
-            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(-OffsetToAdd, OffsetToAdd, 0.0f));
+            SetCameraLocation(m_Camera->GetComponentLocation() + FVector(OffsetToAdd, OffsetToAdd, 0.0f));
             break;
         }
     }
@@ -99,5 +112,27 @@ void ACameraHandler::SetCameraLocation(const FVector& position)
 void ACameraHandler::ChangeState(const CameraMoveState& newState)
 {
     m_CameraState = newState;
+}
+
+void ACameraHandler::SubscribeOnEvents()
+{
+    m_EventsHandler.subscribe({
+        {GameplayEventType::CameraZoom, [this](const EventData& eventData) { OnCameraZoom(eventData); }},
+        });
+}
+
+void ACameraHandler::OnCameraZoom(const EventData& eventData)
+{
+    if (eventData.eventType == GameplayEventType::CameraZoom)
+    {
+        //#TODO add clamp
+        
+        const CameraZoomEventData& cameraZoomEvent =
+            static_cast<const CameraZoomEventData&>(eventData);
+
+        SetCameraLocation(m_Camera->GetComponentLocation() + FVector(0.0f, 0.0f, cameraZoomEvent.scaleValue));
+
+        PrintOnScreenHelper::PrintOnScreenFVector(m_Camera->GetComponentLocation());
+    }
 }
 

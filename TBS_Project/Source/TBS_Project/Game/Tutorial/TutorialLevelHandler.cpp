@@ -1,24 +1,47 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "TutorialLevelHandler.h"
+#include "Game/LevelTile.h"
+#include "Engine/World.h"
 
-// Sets default values
 ATutorialLevelHandler::ATutorialLevelHandler()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
-
+ 	PrimaryActorTick.bCanEverTick = true;
+	GenerateTiles();
 }
 
-// Called when the game starts or when spawned
 void ATutorialLevelHandler::BeginPlay()
 {
 	Super::BeginPlay();
 	
 }
 
-// Called every frame
+void ATutorialLevelHandler::GenerateTiles()
+{
+	//generating 10x10 field
+	const int TilesAmount = 100;
+	m_Tiles.Reserve(TilesAmount);
+
+	if (UWorld* const world = GetWorld())
+	{
+		const float Size = 100.0f;
+	
+		for (int i = 0; i < TilesAmount; ++i)
+		{
+			const int CurrentDimension = i / 10;
+			const float CurrentYPos = CurrentDimension * Size;
+			const float CurrentXPos = (i % 10) * Size;
+
+			ALevelTile* tile =
+				world->SpawnActor<ALevelTile>(FVector(CurrentXPos, CurrentYPos, 10.0f), FRotator(0.0f, 0.0f, 0.0f));
+
+			tile->SetId(i);
+
+			m_Tiles.Add(tile);
+		}
+
+	}
+
+}
+
 void ATutorialLevelHandler::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

@@ -12,6 +12,7 @@ class TBS_PROJECT_API ALevelTile : public AActor
 public:	
 	ALevelTile();
 	void Tick(float DeltaTime) override;
+	void SetId(int _id);
 
 protected:
 	void BeginPlay() override;
@@ -26,5 +27,7 @@ private:
 
     UPROPERTY()
     UMaterialInstanceDynamic* m_ColorMaterial = nullptr;
+
+	int m_Id = 0;
 
 };

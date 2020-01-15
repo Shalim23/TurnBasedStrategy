@@ -24,10 +24,11 @@ ALevelTile::ALevelTile()
 		m_ColorMaterial = UMaterialInstanceDynamic::Create(MaterialAsset.Object, m_Mesh);
 	}
 
-	m_Mesh->SetWorldLocation(FVector(100.0f, 100.0f, 10.0f), false, 0, ETeleportType::None);
 	m_Mesh->SetMaterial(0, m_ColorMaterial);
 
 	m_Mesh->OnClicked.AddDynamic(this, &ALevelTile::ChangeColor);
+
+	RootComponent = m_Mesh;
 }
 
 void ALevelTile::BeginPlay()
@@ -38,13 +39,18 @@ void ALevelTile::BeginPlay()
 
 void ALevelTile::ChangeColor(UPrimitiveComponent* ClickedComp, FKey ButtonPressed)
 {
-	PrintOnScreenHelper::PrintOnScreenFString("ALevelTile::ChangeColor");
-	m_ColorMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor::Red);
+	PrintOnScreenHelper::PrintOnScreenInt(m_Id);
+	//m_ColorMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor::Red);
 }
 
 void ALevelTile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+}
+
+void ALevelTile::SetId(int _id)
+{
+	m_Id = _id;
 }
 

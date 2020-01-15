@@ -23,6 +23,13 @@ void ANetworkManager::BeginPlay()
     m_NetworkMessagesHandler.Init();
 }
 
+void ANetworkManager::EndPlay(const EEndPlayReason::Type reason)
+{
+    Super::EndPlay(reason);
+
+    m_EventsHandler.unsubscribe();
+}
+
 void ANetworkManager::OnReturnToMainMenu(const EventData& eventData)
 {
     if (eventData.eventType == GameplayEventType::ReturnToMainMenu)

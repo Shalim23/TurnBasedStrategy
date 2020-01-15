@@ -14,6 +14,7 @@ void EventDispatcher::Init()
     m_Events.insert({ GameplayEventType::NotReady, std::make_unique<NotReadyEvent>() });
     m_Events.insert({ GameplayEventType::ServerConnectionLost, std::make_unique<ServerConnectionLostEvent>() });
     m_Events.insert({ GameplayEventType::WaitingForPlayers, std::make_unique<WaitingForPlayersEvent>() });
+    m_Events.insert({ GameplayEventType::CameraZoom, std::make_unique<CameraZoomEvent>() });
 }
 
 BaseGameEvent* EventDispatcher::GetEvent(const GameplayEventType& eventType)

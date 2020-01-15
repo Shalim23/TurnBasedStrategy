@@ -18,6 +18,7 @@ enum class GameplayEventType
     NotReady,
     ServerConnectionLost,
     WaitingForPlayers,
+    CameraZoom
 };
 
 struct EventData
@@ -68,8 +69,21 @@ DECLARE_DERIVED_EVENT(EventDispatcher, BaseGameEvent, AllPlayersReadyEvent)
 DECLARE_DERIVED_EVENT(EventDispatcher, BaseGameEvent, NotReadyEvent)
 DECLARE_DERIVED_EVENT(EventDispatcher, BaseGameEvent, ServerConnectionLostEvent)
 DECLARE_DERIVED_EVENT(EventDispatcher, BaseGameEvent, WaitingForPlayersEvent)
+DECLARE_DERIVED_EVENT(EventDispatcher, BaseGameEvent, CameraZoomEvent)
 
 //Client events data
+
+struct CameraZoomEventData : public EventData
+{
+    using Super = EventData;
+
+    CameraZoomEventData(float _scaleValue)
+        : Super(GameplayEventType::CameraZoom)
+        , scaleValue(_scaleValue)
+    {}
+
+    float scaleValue = 0.0f;
+};
 
 struct NotReadyEventData : public EventData
 {
