@@ -3,35 +3,32 @@
 #include "Components/StaticMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Custom/Utils/PrintScreenHelper.h"
-#include "Custom/Utils/Macros.h"
 
 
 //#TODO remove debug operations
 ALevelTile::ALevelTile()
 {
-	INIT_ONCE(
-        PrimaryActorTick.bCanEverTick = true;
-        ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Engine/BasicShapes/Plane"));
-        if (MeshAsset.Succeeded())
-        {
-            m_Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh"));
-            m_Mesh->SetStaticMesh(MeshAsset.Object);
-        }
+    PrimaryActorTick.bCanEverTick = true;
+    ConstructorHelpers::FObjectFinder<UStaticMesh> MeshAsset(TEXT("/Engine/BasicShapes/Plane"));
+    if (MeshAsset.Succeeded())
+    {
+        m_Mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("PlaneMesh"));
+        m_Mesh->SetStaticMesh(MeshAsset.Object);
+    }
 
-        ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("/Game/ColorMaterial"));
+    ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialAsset(TEXT("/Game/ColorMaterial"));
 
-        if (MaterialAsset.Succeeded())
-        {
-            m_ColorMaterial = CreateDefaultSubobject<UMaterialInstanceDynamic>(TEXT("Material"));
-            m_ColorMaterial = UMaterialInstanceDynamic::Create(MaterialAsset.Object, m_Mesh);
-        }
+    if (MaterialAsset.Succeeded())
+    {
+        m_ColorMaterial = CreateDefaultSubobject<UMaterialInstanceDynamic>(TEXT("Material"));
+        m_ColorMaterial = UMaterialInstanceDynamic::Create(MaterialAsset.Object, m_Mesh);
+    }
 
-        m_Mesh->SetMaterial(0, m_ColorMaterial);
+    m_Mesh->SetMaterial(0, m_ColorMaterial);
 
-        m_Mesh->OnClicked.AddDynamic(this, &ALevelTile::ChangeColor);
+    m_Mesh->OnClicked.AddDynamic(this, &ALevelTile::ChangeColor);
 
-        RootComponent = m_Mesh;
-        )
+    RootComponent = m_Mesh;
 }
 
 void ALevelTile::BeginPlay()

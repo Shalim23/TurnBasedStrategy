@@ -1,14 +1,11 @@
 #include "TutorialLevelHandler.h"
 #include "Game/LevelTile.h"
-#include "Custom/Utils/Macros.h"
 
 ATutorialLevelHandler::ATutorialLevelHandler()
 {
-	INIT_ONCE(
-		PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.bCanEverTick = true;
 
-		GenerateTiles();
-		)
+    GenerateTiles();
 }
 
 void ATutorialLevelHandler::BeginPlay()

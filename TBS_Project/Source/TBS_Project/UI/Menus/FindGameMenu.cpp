@@ -3,22 +3,19 @@
 #include "Components/WidgetComponent.h"
 #include "Custom/Events/EventDispatcher.h"
 #include "UI/Widgets/FindGameWidget.h"
-#include "Custom/Utils/Macros.h"
 
 AFindGameMenu::AFindGameMenu()
 {
-    INIT_ONCE(
-        PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = false;
 
-        m_widgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("FindGameWidget"));
-        ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/FindGameWidget"));
-        if (widget.Succeeded())
-        {
-            m_widgetComponent->SetWidgetClass(widget.Class);
-        }
+    m_widgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("FindGameWidget"));
+    ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/FindGameWidget"));
+    if (widget.Succeeded())
+    {
+        m_widgetComponent->SetWidgetClass(widget.Class);
+    }
 
-        SubcribeOnEvents();
-        )
+    SubcribeOnEvents();
 }
 
 void AFindGameMenu::OnReturnToMainMenu(const EventData& eventData)

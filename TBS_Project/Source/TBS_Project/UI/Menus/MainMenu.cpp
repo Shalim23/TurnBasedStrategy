@@ -2,22 +2,19 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/WidgetComponent.h"
 #include "Custom/Events/Events.h"
-#include "Custom/Utils/Macros.h"
 
 AMainMenu::AMainMenu()
 {
-    INIT_ONCE(
-        PrimaryActorTick.bCanEverTick = false;
+    PrimaryActorTick.bCanEverTick = false;
 
-        m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("MainMenuWidget"));
-        ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/MainMenuWidget"));
-        if (widget.Succeeded())
-        {
-            m_widget->SetWidgetClass(widget.Class);
-        }
+    m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("MainMenuWidget"));
+    ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/MainMenuWidget"));
+    if (widget.Succeeded())
+    {
+        m_widget->SetWidgetClass(widget.Class);
+    }
 
-        SubcribeOnEvents();
-        )
+    SubcribeOnEvents();
 }
 
 void AMainMenu::SubcribeOnEvents()
