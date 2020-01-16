@@ -6,6 +6,7 @@ class Singleton
 public:
     static ClassName& GetInstance(){ static ClassName instance; return instance; }
     virtual void Init() = 0;
+    virtual void Shutdown() = 0;
 
 protected:
     Singleton() = default;

@@ -34,6 +34,11 @@ void GameRulesDataHelper::InitGameRulesData()
     }
 }
 
+void GameRulesDataHelper::Clear()
+{
+    m_Data.clear();
+}
+
 std::vector<GameRulesData> GameRulesDataHelper::ProcessGameRulesCategory(const TSharedPtr<FJsonObject>& gameRulesCurrentCategoryJson)
 {
     std::vector<GameRulesData> toReturn;

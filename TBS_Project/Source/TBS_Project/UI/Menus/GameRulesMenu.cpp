@@ -2,17 +2,22 @@
 #include "UObject/ConstructorHelpers.h"
 #include "Components/WidgetComponent.h"
 #include "Custom/Events/Events.h"
+#include "Custom/Utils/Macros.h"
 
 AGameRulesMenu::AGameRulesMenu()
 {
-    PrimaryActorTick.bCanEverTick = false;
+    INIT_ONCE(
+        PrimaryActorTick.bCanEverTick = false;
 
-    m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("GameRulesWidget"));
-    ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/GameRulesWidget"));
-    if (widget.Succeeded())
-    {
-        m_widget->SetWidgetClass(widget.Class);
-    }
+        m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("GameRulesWidget"));
+        ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/GameRulesWidget"));
+        if (widget.Succeeded())
+        {
+            m_widget->SetWidgetClass(widget.Class);
+        }
+
+        SubcribeOnEvents();
+        )
 }
 
 void AGameRulesMenu::OnReturnToMainMenu(const EventData& eventData)
@@ -22,7 +27,6 @@ void AGameRulesMenu::OnReturnToMainMenu(const EventData& eventData)
         return;
     }
 
-    m_EventsHandler.unsubscribe();
     Destroy();
 }
 
@@ -37,7 +41,11 @@ void AGameRulesMenu::BeginPlay()
 {
     Super::BeginPlay();
 
-    SubcribeOnEvents();
+}
+
+void AGameRulesMenu::EndPlay(const EEndPlayReason::Type reason)
+{
+    Super::EndPlay(reason);
 }
 
 void AGameRulesMenu::Tick(float DeltaTime)

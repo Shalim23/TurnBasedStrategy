@@ -19,6 +19,7 @@ public:
 
 protected:
     void BeginPlay() override;
+    void EndPlay(const EEndPlayReason::Type reason) override;
 
 private:
     void OnLeaveMainMenu(const EventData& eventData);

@@ -2,32 +2,35 @@
 #include "Custom/Events/Events.h"
 #include "Custom/Events/EventDispatcher.h"
 #include "Serialization/JsonSerializer.h"
+#include "Custom/Utils/Macros.h"
 
 ANetworkManager::ANetworkManager()
 {
-    PrimaryActorTick.bCanEverTick = true;
+    INIT_ONCE(
+        PrimaryActorTick.bCanEverTick = true;
+
+        SetActorTickEnabled(false);
+
+        SubscribeOnEvents();
+
+        m_NetworkSocketHandler.SetMessageFromServerCallback(
+            [this](const TSharedPtr<FJsonObject>& jsonObject) { ProcessMessage(jsonObject); });
+
+        m_NetworkSocketHandler.SetSendErrorCallback([this]() { OnConnectionError(); });
+
+        m_NetworkMessagesHandler.Init();
+        )
 }
 
 void ANetworkManager::BeginPlay()
 {
     Super::BeginPlay();
-    SetActorTickEnabled(false);
-
-    SubscribeOnEvents();
-
-    m_NetworkSocketHandler.SetMessageFromServerCallback(
-        [this](const TSharedPtr<FJsonObject>& jsonObject) { ProcessMessage(jsonObject); });
-
-    m_NetworkSocketHandler.SetSendErrorCallback([this]() { OnConnectionError(); });
-
-    m_NetworkMessagesHandler.Init();
+    
 }
 
 void ANetworkManager::EndPlay(const EEndPlayReason::Type reason)
 {
     Super::EndPlay(reason);
-
-    m_EventsHandler.unsubscribe();
 }
 
 void ANetworkManager::OnReturnToMainMenu(const EventData& eventData)

@@ -4,27 +4,28 @@
 #include "Components/WidgetComponent.h"
 #include "Custom/Events/Events.h"
 #include "Custom/Utils/PrintScreenHelper.h"
+#include "Custom/Utils/Macros.h"
 
-
-//#TODO add zoom in/out
 ACameraHandler::ACameraHandler()
 {
- 	PrimaryActorTick.bCanEverTick = true;
-	m_Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
+    INIT_ONCE(
+        PrimaryActorTick.bCanEverTick = true;
+        m_Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
 
-    m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("CameraBordersWidget"));
-    ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/CameraBordersWidget"));
-    if (widget.Succeeded())
-    {
-        m_widget->SetWidgetClass(widget.Class);
-    }
+        m_widget = CreateDefaultSubobject<UWidgetComponent>(TEXT("CameraBordersWidget"));
+        ConstructorHelpers::FClassFinder<UUserWidget> widget(TEXT("/Game/CameraBordersWidget"));
+        if (widget.Succeeded())
+        {
+            m_widget->SetWidgetClass(widget.Class);
+        }
 
-    SetCameraLocation(FVector(0.0f, 0.0f, 300.0f));
-    m_Camera->SetWorldRotation(FQuat(FRotator(-90.0f, 0.0f, -90.0f)), false, 0, ETeleportType::None);
+        SetCameraLocation(FVector(0.0f, 0.0f, 300.0f));
+        m_Camera->SetWorldRotation(FQuat(FRotator(-90.0f, 0.0f, -90.0f)), false, 0, ETeleportType::None);
 
-    RootComponent = m_Camera;
+        RootComponent = m_Camera;
 
-    SubscribeOnEvents();
+        SubscribeOnEvents();
+        )
 }
 
 void ACameraHandler::BeginPlay()
@@ -46,8 +47,6 @@ void ACameraHandler::BeginPlay()
 void ACameraHandler::EndPlay(const EEndPlayReason::Type reason)
 {
     Super::EndPlay(reason);
-
-    m_EventsHandler.unsubscribe();
 }
 
 void ACameraHandler::Tick(float DeltaTime)

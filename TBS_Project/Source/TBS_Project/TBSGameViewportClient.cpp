@@ -4,6 +4,7 @@ void UTBSGameViewportClient::ReceivedFocus(FViewport* viewport)
 {
     UGameViewportClient::ReceivedFocus(viewport);
 
+    //locks mouse to game window after loosing focus
     APlayerController* controller = GetWorld()->GetFirstPlayerController();
     if (controller)
     {

@@ -11,7 +11,6 @@ public:
 	~EventsHandler();
 
 	void subscribe(const std::vector<EventSubscribeData>& callbacks);
-	void unsubscribe();
 
 private:
     std::vector<EventDelegateHandle> m_delegateHandles;

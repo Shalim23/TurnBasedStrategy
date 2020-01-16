@@ -10,6 +10,7 @@ class EventDispatcher : public Singleton<EventDispatcher>
 
 public:
     void Init() override;
+    void Shutdown() override;
 
     std::vector<EventDelegateHandle> subscribe(const std::vector<EventSubscribeData>& callbacks);
 

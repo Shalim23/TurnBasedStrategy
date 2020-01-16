@@ -17,6 +17,7 @@ class GameRulesDataHelper
 {
 public:
     void InitGameRulesData();
+    void Clear();
 
     const std::vector<GameRulesCategoryData>& GetData() const { return m_Data; }
 

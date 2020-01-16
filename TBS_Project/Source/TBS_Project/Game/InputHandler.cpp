@@ -1,10 +1,13 @@
 #include "InputHandler.h"
 #include "Custom/Utils/PrintScreenHelper.h"
+#include "Custom/Utils/Macros.h"
 #include "Custom/Events/EventDispatcher.h"
 
 AInputHandler::AInputHandler()
 {
-	PrimaryActorTick.bCanEverTick = true;
+    INIT_ONCE(
+        PrimaryActorTick.bCanEverTick = true;
+        )
 }
 
 void AInputHandler::BeginPlay()

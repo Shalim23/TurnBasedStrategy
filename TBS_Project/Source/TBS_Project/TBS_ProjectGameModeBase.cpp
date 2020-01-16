@@ -27,13 +27,13 @@ void ATBS_ProjectGameModeBase::BeginPlay()
             controller->bEnableMouseOverEvents = true;
             controller->bEnableClickEvents = true;
 
-            controller->Possess(world->SpawnActor<AInputHandler>());
+            //controller->Possess(world->SpawnActor<AInputHandler>());
 
-            world->SpawnActor<ATutorialLevelHandler>();
+            //world->SpawnActor<ATutorialLevelHandler>();
 
-            world->SpawnActor<ACameraHandler>();
-            //world->SpawnActor<ANetworkManager>();
-            //world->SpawnActor<AMainMenu>();
+            //world->SpawnActor<ACameraHandler>();
+            world->SpawnActor<ANetworkManager>();
+            world->SpawnActor<AMainMenu>();
         }
     }
 }

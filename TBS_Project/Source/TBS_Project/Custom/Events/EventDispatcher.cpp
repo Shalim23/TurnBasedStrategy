@@ -17,6 +17,11 @@ void EventDispatcher::Init()
     m_Events.insert({ GameplayEventType::CameraZoom, std::make_unique<CameraZoomEvent>() });
 }
 
+void EventDispatcher::Shutdown()
+{
+    m_Events.clear();
+}
+
 BaseGameEvent* EventDispatcher::GetEvent(const GameplayEventType& eventType)
 {
     auto iter = m_Events.find(eventType);
