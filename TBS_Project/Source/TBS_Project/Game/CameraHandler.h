@@ -18,6 +18,8 @@ class TBS_PROJECT_API ACameraHandler : public AActor
 public:	
 	ACameraHandler();
 	void Tick(float DeltaTime) override;
+	void Activate();
+	void UpdateCamera(const FVector& direction, const FVector& location);
 
 protected:
 	void BeginPlay() override;
@@ -25,7 +27,6 @@ protected:
 
 private:
 	void ProcessCameraState();
-	void SetCameraLocation(const FVector& position);
 	void ChangeState(const CameraMoveState& newState);
 
 	void SubscribeOnEvents();

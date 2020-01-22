@@ -17,7 +17,7 @@ void ATutorialLevelHandler::BeginPlay()
 void ATutorialLevelHandler::GenerateTiles()
 {
 	//generating 10x10 field
-	const int TilesAmount = 100;
+	const int TilesAmount = 10000;
 	m_Tiles.Reserve(TilesAmount);
 
 	if (UWorld* const world = GetWorld())
@@ -26,9 +26,9 @@ void ATutorialLevelHandler::GenerateTiles()
 	
 		for (int i = 0; i < TilesAmount; ++i)
 		{
-			const int CurrentDimension = i / 10;
+			const int CurrentDimension = i / 100;
 			const float CurrentYPos = CurrentDimension * Size;
-			const float CurrentXPos = (i % 10) * Size;
+			const float CurrentXPos = (i % 100) * Size;
 
 			ALevelTile* tile =
 				world->SpawnActor<ALevelTile>(FVector(CurrentXPos, CurrentYPos, 10.0f), FRotator(0.0f, 0.0f, 0.0f));

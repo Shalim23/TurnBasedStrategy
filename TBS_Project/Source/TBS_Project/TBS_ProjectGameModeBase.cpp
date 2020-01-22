@@ -4,6 +4,7 @@
 #include "Game/CameraHandler.h"
 #include "Game/InputHandler.h"
 #include "Game/Tutorial/TutorialLevelHandler.h"
+#include "Game/RollingBall.h"
 
 ATBS_ProjectGameModeBase::ATBS_ProjectGameModeBase()
 {
@@ -27,13 +28,14 @@ void ATBS_ProjectGameModeBase::BeginPlay()
             controller->bEnableMouseOverEvents = true;
             controller->bEnableClickEvents = true;
 
-            //controller->Possess(world->SpawnActor<AInputHandler>());
+            //ARollingBall* ball = world->SpawnActor<ARollingBall>(FVector(400.0f, 400.0f, 100.0f), FRotator(0.0f, 0.0f, 0.0f));
+            //controller->Possess(ball);
 
-            //world->SpawnActor<ATutorialLevelHandler>();
+            world->SpawnActor<ATutorialLevelHandler>();
 
-            //world->SpawnActor<ACameraHandler>();
-            world->SpawnActor<ANetworkManager>();
-            world->SpawnActor<AMainMenu>();
+            //ball->SetCamera(world->SpawnActor<ACameraHandler>());
+            //world->SpawnActor<ANetworkManager>();
+            //world->SpawnActor<AMainMenu>();
         }
     }
 }
